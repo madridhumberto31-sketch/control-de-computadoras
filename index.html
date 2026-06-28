@@ -899,6 +899,7 @@ function init() {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
     setSyncStatus('syncing', 'Conectando…');
+    showDashboard();
     subscribeToFirestore();
     subscribeToAuditoria();
   } catch(err) {
