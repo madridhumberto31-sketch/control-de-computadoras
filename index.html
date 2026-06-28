@@ -769,13 +769,15 @@
 
 <!-- Firebase SDK v10 (módulos compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
 /* ═══════════════════════════════════════════════════════════
-   🔐 CONTRASEÑA DE ADMINISTRADOR
+   🔐 AUTENTICACIÓN FIREBASE
 ═══════════════════════════════════════════════════════════ */
 const ADMIN_PASSWORD = 'llano2024';
+const ADMIN_AUTH_EMAIL = 'admin@clases.edu.sv';
 
 /* ═══════════════════════════════════════════════════════════
    🔥 FIREBASE CONFIG
@@ -795,6 +797,7 @@ const IS_CONFIGURED = !FIREBASE_CONFIG.apiKey.startsWith("TU_");
    ESTADO GLOBAL
 ════════════════════════════════ */
 let db          = null;
+let auth        = null;
 let equipos     = [];
 let editId      = null;
 let filtros     = { estado: 'todos', tipo: 'todos' };
@@ -864,14 +867,34 @@ async function doLogin() {
 
   if (selectedRole === 'admin') {
     const pwd = document.getElementById('pwdInput').value;
-    if (pwd !== ADMIN_PASSWORD) {
+    if (!pwd) {
       document.getElementById('pwdInput').classList.add('error');
+      document.getElementById('pwdError').classList.add('show');
+      return;
+    }
+    if (!IS_CONFIGURED || !auth) {
+      document.getElementById('pwdError').textContent = 'No hay conexión a Firebase Authentication.';
+      document.getElementById('pwdError').classList.add('show');
+      return;
+    }
+    try {
+      const cred = await auth.signInWithEmailAndPassword(ADMIN_AUTH_EMAIL, pwd);
+      currentUser = {
+        id: cred.user.uid,
+        nombre: 'Administrador',
+        tipo: 'admin',
+        usuario: ADMIN_AUTH_EMAIL,
+        email: cred.user.email
+      };
+    } catch (err) {
+      console.error('Login admin error:', err);
+      document.getElementById('pwdInput').classList.add('error');
+      document.getElementById('pwdError').textContent = 'Credenciales de administrador inválidas.';
       document.getElementById('pwdError').classList.add('show');
       document.getElementById('pwdInput').value = '';
       setTimeout(() => document.getElementById('pwdInput').classList.remove('error'), 600);
       return;
     }
-    currentUser = { id: 'admin', nombre: 'Administrador', tipo: 'admin', usuario: 'admin' };
   } else {
     const correo = document.getElementById('userInput').value.trim().toLowerCase();
     const pwd = document.getElementById('pwdInput').value;
@@ -881,31 +904,30 @@ async function doLogin() {
       document.getElementById('pwdError').classList.add('show');
       return;
     }
-    if (!IS_CONFIGURED || !db) {
+    if (!IS_CONFIGURED || !auth || !db) {
       document.getElementById('pwdError').textContent = 'No hay conexión a Firebase para validar usuarios.';
       document.getElementById('pwdError').classList.add('show');
       return;
     }
     try {
-      const snap = await db.collection('usuarios').where('tipo', '==', 'student').where('password', '==', pwd).limit(20).get();
-      const doc = snap.docs.find(item => {
-        const data = item.data();
-        const usuario = (data.usuario || '').toLowerCase();
-        const institucional = (data.correoInstitucional || data.correo || '').toLowerCase();
-        return usuario === correo || institucional === correo;
-      });
+      const credential = await auth.signInWithEmailAndPassword(correo, pwd);
+      const snap = await db.collection('usuarios').where('correoInstitucional', '==', correo).limit(1).get();
+      const doc = snap.docs[0];
       if (!doc) {
+        await auth.signOut();
         document.getElementById('userInput').classList.add('error');
         document.getElementById('pwdInput').classList.add('error');
+        document.getElementById('pwdError').textContent = 'No existe un perfil de alumno para este correo.';
         document.getElementById('pwdError').classList.add('show');
         document.getElementById('pwdInput').value = '';
         return;
       }
-      currentUser = { id: doc.id, ...doc.data(), tipo: 'student' };
+      currentUser = { id: doc.id, ...doc.data(), tipo: 'student', authUid: credential.user.uid, email: credential.user.email };
     } catch (err) {
       console.error('Login student error:', err);
       document.getElementById('pwdError').textContent = 'No se pudo validar el usuario.';
       document.getElementById('pwdError').classList.add('show');
+      document.getElementById('pwdInput').value = '';
       return;
     }
   }
@@ -945,6 +967,9 @@ function applyRoleUI() {
 function logout() {
   sessionStorage.removeItem('inv_role');
   sessionStorage.removeItem('inv_user');
+  if (auth && auth.currentUser) {
+    auth.signOut().catch(() => {});
+  }
   if (unsubscribe) { unsubscribe(); unsubscribe = null; }
   if (auditUnsubscribe) { auditUnsubscribe(); auditUnsubscribe = null; }
   currentRole = null; selectedRole = null; currentUser = null;
@@ -985,6 +1010,7 @@ function init() {
   }
   try {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
     db = firebase.firestore();
     setSyncStatus('syncing', 'Conectando…');
     subscribeToFirestore();
@@ -1133,7 +1159,7 @@ async function registrarAuditoria(accion, equipo, cambios) {
 }
 
 async function openCreateStudentAccount() {
-  if (!IS_CONFIGURED || !db) {
+  if (!IS_CONFIGURED || !db || !auth) {
     toast('⚠️ No hay conexión a Firebase para crear cuentas', 'warning');
     return;
   }
@@ -1149,19 +1175,20 @@ async function openCreateStudentAccount() {
       alert('Ese correo institucional ya existe. Elige otro.');
       return;
     }
+    const cred = await auth.createUserWithEmailAndPassword(correoTrim, passwordTrim);
     await db.collection('usuarios').add({
       tipo: 'student',
       usuario: correoTrim,
       correoInstitucional: correoTrim,
-      password: passwordTrim,
       nombre: correoTrim,
+      authUid: cred.user.uid,
       creadoPor: currentUser?.nombre || 'Administrador',
       creadoEn: firebase.firestore.FieldValue.serverTimestamp()
     });
-    toast('✅ Cuenta de alumno creada en Firebase', 'success');
+    toast('✅ Cuenta de alumno creada en Firebase Authentication', 'success');
   } catch (err) {
     console.error('Crear usuario error:', err);
-    toast('❌ No se pudo crear la cuenta', 'error');
+    toast('❌ No se pudo crear la cuenta: ' + (err.message || 'Error desconocido'), 'error');
   }
 }
 
