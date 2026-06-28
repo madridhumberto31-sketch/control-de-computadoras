@@ -1150,6 +1150,11 @@ const GRADOS_ORDER = [
   '1° Año General','2° Año General'
 ];
 
+function getEffectiveEstado(e) {
+  if (e.tipo === 'No dispone de equipo informatico') return 'sin equipo';
+  return e.estado || 'sin equipo';
+}
+
 function renderDashboard() {
   // Stats globales
   renderStats(null, 'statsGridDash');
@@ -1158,11 +1163,12 @@ function renderDashboard() {
   // Construir datos por grado
   const gradoMap = {};
   equipos.forEach(e => {
+    const effectiveEstado = getEffectiveEstado(e);
     const g = e.grado || '(Sin grado)';
     if (!gradoMap[g]) gradoMap[g] = { total: 0, buenos: 0, danados: 0 };
     gradoMap[g].total++;
-    if (e.estado === 'bueno')  gradoMap[g].buenos++;
-    if (e.estado === 'dañado') gradoMap[g].danados++;
+    if (effectiveEstado === 'bueno')  gradoMap[g].buenos++;
+    if (effectiveEstado === 'dañado') gradoMap[g].danados++;
   });
 
   // Ordenar grados según orden canónico, desconocidos al final
@@ -1206,12 +1212,24 @@ function renderDashboard() {
 /* ════════════════════════════════
    STATS
 ════════════════════════════════ */
+function getSummarySource(gradeFilter) {
+  let src = gradeFilter ? equipos.filter(e => e.grado === gradeFilter) : equipos;
+  if (currentSummaryFilter === 'sinEquipo') {
+    src = src.filter(e => e.tipo === 'No dispone de equipo informatico');
+  } else if (currentSummaryFilter === 'sinTablet') {
+    src = src.filter(e => e.tipo !== 'Tablet');
+  } else if (currentSummaryFilter === 'sinComputadora') {
+    src = src.filter(e => e.tipo !== 'Computadora');
+  }
+  return src;
+}
+
 function renderStats(gradeFilter, targetId) {
-  const src    = gradeFilter ? equipos.filter(e => e.grado === gradeFilter) : equipos;
+  const src    = getSummarySource(gradeFilter);
   const gridId = targetId || 'statsGridInv';
   const total      = src.length;
-  const buenos     = src.filter(e => e.estado === 'bueno').length;
-  const danados    = src.filter(e => e.estado === 'dañado').length;
+  const buenos     = src.filter(e => getEffectiveEstado(e) === 'bueno').length;
+  const danados    = src.filter(e => getEffectiveEstado(e) === 'dañado').length;
   const tablets    = src.filter(e => e.tipo   === 'Tablet').length;
   const compus     = src.filter(e => e.tipo   === 'Computadora').length;
   const sinEquipo  = src.filter(e => e.tipo   === 'No dispone de equipo informatico').length;
@@ -1246,16 +1264,10 @@ function setFiltro(key, val, btn) {
 
 function filteredEquipos() {
   const q  = (document.getElementById('searchInput')?.value || '').toLowerCase();
-  let src  = currentGradeFilter ? equipos.filter(e => e.grado === currentGradeFilter) : equipos;
-  if (currentSummaryFilter === 'sinEquipo') {
-    src = src.filter(e => e.tipo === 'No dispone de equipo informatico');
-  } else if (currentSummaryFilter === 'sinTablet') {
-    src = src.filter(e => e.tipo !== 'Tablet');
-  } else if (currentSummaryFilter === 'sinComputadora') {
-    src = src.filter(e => e.tipo !== 'Computadora');
-  }
+  const src = getSummarySource(currentGradeFilter);
   return src.filter(e => {
-    const mE = filtros.estado === 'todos' || e.estado === filtros.estado;
+    const effectiveEstado = getEffectiveEstado(e);
+    const mE = filtros.estado === 'todos' || effectiveEstado === filtros.estado;
     const mT = filtros.tipo   === 'todos' || e.tipo   === filtros.tipo;
     const mS = !q || e.nombre.toLowerCase().includes(q) || e.correo.toLowerCase().includes(q);
     return mE && mT && mS;
@@ -1303,7 +1315,8 @@ function renderCards() {
     return;
   }
   grid.innerHTML = list.map(e => {
-    const isBueno  = e.estado === 'bueno';
+    const effectiveEstado = getEffectiveEstado(e);
+    const isBueno  = effectiveEstado === 'bueno';
     const isMasc   = e.sexo   === 'Masculino';
     const tipo     = e.tipo || '';
     const isTablet = tipo === 'Tablet';
@@ -1319,6 +1332,7 @@ function renderCards() {
     const dateStr   = formatDate(e.creadoEn);
     const toggleLbl = isBueno ? '⚠️ Marcar dañado' : '✅ Marcar en buen estado';
     const toggleCls = isBueno ? 'btn-toggle-bad' : 'btn-toggle-good';
+    const estadoLabel = isSinEquipo ? '🚫 Sin equipo' : isBueno ? '✅ Buen estado' : '⚠️ Dañado';
 
     const gradoBadge = e.grado ? `<span class="badge badge-grade">📚 ${escHtml(e.grado)}</span>` : '';
     const seccionBadge = e.seccion ? `<span class="badge badge-grade">🏷️ Sección ${escHtml(e.seccion)}</span>` : '';
@@ -1345,7 +1359,7 @@ function renderCards() {
       </div>
       <div class="card-meta">
         <span class="badge ${tipoBadgeClass}">${tipoBadgeIcon} ${escHtml(e.tipo || 'Sin equipo')}</span>
-        <span class="badge ${isBueno?'badge-good':'badge-bad'}">${isBueno?'✅ Buen estado':'⚠️ Dañado'}</span>
+        <span class="badge ${isBueno?'badge-good':'badge-bad'}">${estadoLabel}</span>
         ${gradoBadge}
         ${seccionBadge}
         <span class="badge badge-sex">${escHtml(e.sexo)}</span>
