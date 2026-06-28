@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventario Tecnológico – Complejo Educativo Caserío Llano Largo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-start: #0f1c35;
+      --bg-end:   #1e0f3a;
+      --surface:  rgba(255,255,255,0.055);
+      --surface-hover: rgba(255,255,255,0.09);
+      --border:   rgba(255,255,255,0.10);
+      --gold:     #f59e0b;
+      --gold-light: #fcd34d;
+      --teal:     #0d9488;
+      --teal-light:#2dd4bf;
+      --rose:     #f43f5e;
+      --indigo:   #6366f1;
+      --indigo-light: #a5b4fc;
+      --text:     #e8eaf6;
+      --text-muted:#94a3b8;
+      --radius:   16px;
+      --shadow:   0 8px 32px rgba(0,0,0,0.45);
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+      min-height: 100vh; color: var(--text); overflow-x: hidden;
+    }
+
+    /* ── LOADING SCREEN ── */
+    #loadingScreen {
+      position: fixed; inset: 0; z-index: 999;
+      background: linear-gradient(135deg, #0f1c35 0%, #1e0f3a 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+    }
+    .loader-icon { font-size: 52px; animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.15);opacity:.7} }
+    .loader-text { font-size: 1rem; font-weight: 600; color: var(--text-muted); letter-spacing:.5px; }
+    .loader-bar {
+      width: 200px; height: 4px;
+      background: rgba(255,255,255,.1); border-radius: 4px; overflow: hidden;
+    }
+    .loader-bar-fill {
+      height: 100%; width: 40%;
+      background: linear-gradient(90deg, var(--teal), var(--gold));
+      border-radius: 4px;
+      animation: loading 1.4s ease-in-out infinite;
+    }
+    @keyframes loading { 0%{transform:translateX(-100%)} 100%{transform:translateX(350%)} }
+
+    /* ── SETUP BANNER ── */
+    #setupBanner {
+      background: linear-gradient(135deg, rgba(245,158,11,.15), rgba(180,83,9,.1));
+      border: 1px solid rgba(245,158,11,.35);
+      border-radius: 12px; margin: 20px; padding: 16px 20px;
+      display: none; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    #setupBanner.show { display: flex; }
+    .setup-icon { font-size: 24px; flex-shrink: 0; }
+    .setup-text { flex: 1; min-width: 200px; }
+    .setup-text strong { color: var(--gold-light); font-size: 0.9rem; }
+    .setup-text p { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+    .setup-link {
+      background: rgba(245,158,11,.2); border: 1px solid rgba(245,158,11,.4);
+      color: var(--gold-light); border-radius: 8px; padding: 8px 16px;
+      font-size: 0.8rem; font-weight: 700; cursor: pointer; text-decoration: none;
+      white-space: nowrap;
+    }
+    .setup-link:hover { background: rgba(245,158,11,.35); }
+
+    /* ── HEADER ── */
+    header {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 32px;
+      display: flex; align-items: center; gap: 18px;
+      position: sticky; top: 0; z-index: 100;
+      flex-wrap: wrap;
+    }
+    .header-icon {
+      width: 52px; height: 52px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--gold), #b45309);
+      border-radius: 14px; display: grid; place-items: center; font-size: 26px;
+      box-shadow: 0 4px 18px rgba(245,158,11,0.45);
+    }
+    header h1 { font-size: clamp(0.85rem,2.2vw,1.35rem); font-weight: 800; line-height: 1.2; }
+    header p  { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; letter-spacing:.3px; }
+    .header-spacer { flex: 1; min-width: 10px; }
+    .sync-indicator {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 0.74rem; color: var(--text-muted);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 12px;
+    }
+    .sync-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #6b7280; transition: background .3s;
+    }
+    .sync-dot.online  { background: var(--teal-light); box-shadow: 0 0 6px var(--teal); animation: blink 2s ease-in-out infinite; }
+    .sync-dot.offline { background: var(--rose); }
+    .sync-dot.syncing { background: var(--gold); animation: blink .6s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .btn-add {
+      display: flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--gold), #b45309);
+      color: #1a0900; font-weight: 700; font-size: 0.88rem;
+      border: none; border-radius: 10px; padding: 11px 22px;
+      cursor: pointer; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 16px rgba(245,158,11,0.38); white-space: nowrap;
+    }
+    .btn-add:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,158,11,0.55); }
+    .btn-add:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    /* ── MAIN ── */
+    main { max-width: 1300px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px; margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 18px;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      transition: background .25s, transform .25s;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background: var(--accent, var(--teal)); border-radius:3px 3px 0 0;
+    }
+    .stat-card:hover { background: var(--surface-hover); transform: translateY(-3px); }
+    .stat-icon  { font-size: 28px; margin-bottom: 10px; }
+    .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; letter-spacing:.7px; }
+
+    /* ── DASHBOARD VIEW ── */
+    #dashboardView { display: none; }
+    #dashboardView.active { display: block; }
+    #inventoryView { display: none; }
+    #inventoryView.active { display: block; }
+
+    .dashboard-section-title {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; margin-top: 8px;
+      color: var(--text);
+    }
+    .dashboard-section-title span { font-size: 1.4rem; }
+
+    .grades-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px; margin-bottom: 32px;
+    }
+    .grade-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      cursor: pointer; transition: transform .25s, box-shadow .25s, background .25s, border-color .25s;
+      position: relative; overflow: hidden;
+    }
+    .grade-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background: linear-gradient(90deg, var(--indigo), var(--teal)); border-radius:3px 3px 0 0;
+    }
+    .grade-card:hover {
+      transform: translateY(-4px); box-shadow: var(--shadow);
+      background: var(--surface-hover); border-color: rgba(99,102,241,.4);
+    }
+    .grade-card-name {
+      font-size: .92rem; font-weight: 700; margin-bottom: 12px;
+      color: var(--indigo-light);
+    }
+    .grade-card-total {
+      font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 10px;
+    }
+    .grade-card-detail {
+      display: flex; gap: 14px; font-size: .78rem; margin-bottom: 12px;
+    }
+    .gcd-good { color: var(--teal-light); font-weight: 600; }
+    .gcd-bad  { color: #fda4af; font-weight: 600; }
+    .grade-progress-bar {
+      height: 5px; background: rgba(255,255,255,.1);
+      border-radius: 10px; overflow: hidden;
+    }
+    .grade-progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--teal), var(--teal-light));
+      border-radius: 10px; transition: width .5s ease;
+    }
+    .grade-card-sub { font-size: .68rem; color: var(--text-muted); margin-top: 6px; }
+
+    .btn-view-all {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.35);
+      color: var(--indigo-light); border-radius: 10px; padding: 10px 22px;
+      font-family: inherit; font-size: .88rem; font-weight: 600;
+      cursor: pointer; transition: background .2s, transform .2s;
+      margin-bottom: 8px;
+    }
+    .btn-view-all:hover { background: rgba(99,102,241,.28); transform: translateY(-2px); }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb-row {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-muted); border-radius: 8px; padding: 8px 16px;
+      font-family: inherit; font-size: .82rem; font-weight: 600;
+      cursor: pointer; transition: background .2s, color .2s, border-color .2s;
+    }
+    .btn-back:hover { background: var(--surface-hover); color: var(--text); border-color: rgba(255,255,255,.2); }
+    .breadcrumb-grade {
+      font-size: 1rem; font-weight: 700;
+      background: rgba(99,102,241,.18); border: 1px solid rgba(99,102,241,.3);
+      color: var(--indigo-light); border-radius: 8px; padding: 6px 14px;
+    }
+
+    /* ── FILTERS ── */
+    .filters-row {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-bottom: 24px; align-items: center;
+    }
+    .filter-label { font-size:.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-right:4px; white-space:nowrap; }
+    .filter-btn {
+      background:var(--surface); border:1px solid var(--border); color:var(--text-muted);
+      border-radius:8px; padding:7px 14px; font-size:.82rem; font-family:inherit; font-weight:500;
+      cursor:pointer; transition:all .2s; white-space:nowrap;
+    }
+    .filter-btn:hover  { border-color:var(--teal); color:var(--teal-light); }
+    .filter-btn.active { background:rgba(13,148,136,.18); border-color:var(--teal); color:var(--teal-light); font-weight:700; }
+    .filter-sep { width:1px; height:28px; background:var(--border); margin:0 2px; flex-shrink:0; }
+    .search-wrap { flex:1; min-width:180px; position:relative; }
+    .search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; }
+    .search-input {
+      width:100%; background:var(--surface); border:1px solid var(--border);
+      border-radius:8px; padding:8px 12px 8px 38px;
+      color:var(--text); font-family:inherit; font-size:.85rem; transition:border-color .2s;
+    }
+    .search-input::placeholder { color:var(--text-muted); }
+    .search-input:focus { outline:none; border-color:var(--teal); }
+
+    /* ── CARDS ── */
+    .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:20px; }
+    .equipo-card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:22px; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      transition:transform .25s, box-shadow .25s, background .25s;
+      position:relative; overflow:hidden;
+    }
+    .equipo-card::after {
+      content:''; position:absolute; inset:0; border-radius:var(--radius);
+      background:linear-gradient(135deg,rgba(255,255,255,.04) 0%,transparent 60%); pointer-events:none;
+    }
+    .equipo-card:hover { transform:translateY(-4px); box-shadow:var(--shadow); background:var(--surface-hover); }
+    .card-header { display:flex; align-items:flex-start; gap:14px; margin-bottom:16px; }
+    .card-avatar {
+      width:46px; height:46px; border-radius:12px; flex-shrink:0;
+      display:grid; place-items:center; font-size:20px;
+      background:linear-gradient(135deg,rgba(13,148,136,.3),rgba(45,212,191,.15));
+      border:1px solid rgba(13,148,136,.35);
+    }
+    .card-avatar.fem { background:linear-gradient(135deg,rgba(244,63,94,.25),rgba(251,113,133,.12)); border-color:rgba(244,63,94,.35); }
+    .card-name  { font-weight:700; font-size:1rem; line-height:1.3; }
+    .card-email { font-size:.74rem; color:var(--text-muted); margin-top:2px; word-break:break-all; }
+    .card-date  { font-size:.68rem; color:var(--text-muted); margin-top:3px; opacity:.7; }
+    .card-meta  { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
+    .badge {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:4px 10px; border-radius:20px; font-size:.72rem; font-weight:600;
+    }
+    .badge-type-tablet   { background:rgba(99,102,241,.22); color:#a5b4fc; border:1px solid rgba(99,102,241,.3); }
+    .badge-type-computer { background:rgba(245,158,11,.15); color:#fcd34d; border:1px solid rgba(245,158,11,.3); }
+    .badge-type-none     { background:rgba(244,63,94,.16); color:#fda4af; border:1px solid rgba(244,63,94,.35); }
+    .badge-good { background:rgba(13,148,136,.2);  color:var(--teal-light); border:1px solid rgba(13,148,136,.35); }
+    .badge-bad  { background:rgba(244,63,94,.18);  color:#fda4af;           border:1px solid rgba(244,63,94,.35); }
+    .badge-sex  { background:rgba(255,255,255,.06); color:var(--text-muted); border:1px solid var(--border); }
+    .badge-age  { background:rgba(255,255,255,.06); color:var(--text-muted); border:1px solid var(--border); }
+    .badge-grade { background:rgba(99,102,241,.2); color:var(--indigo-light); border:1px solid rgba(99,102,241,.35); }
+    .card-fallas { margin-bottom:14px; }
+    .card-fallas-title { font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; font-weight:600; }
+    .falla-item { display:flex; align-items:center; gap:6px; font-size:.78rem; color:#fda4af; margin-bottom:3px; }
+    .card-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .btn-sm {
+      flex:1; min-width:75px; border:none; border-radius:8px; padding:8px 10px;
+      font-family:inherit; font-size:.78rem; font-weight:600; cursor:pointer;
+      transition:transform .15s, box-shadow .15s;
+      display:flex; align-items:center; justify-content:center; gap:5px;
+    }
+    .btn-sm:hover { transform:translateY(-1px); }
+    .btn-sm:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+    .btn-toggle-good { background:rgba(13,148,136,.2); color:var(--teal-light); border:1px solid rgba(13,148,136,.4); }
+    .btn-toggle-good:hover { background:rgba(13,148,136,.35); box-shadow:0 3px 10px rgba(13,148,136,.3); }
+    .btn-toggle-bad  { background:rgba(244,63,94,.15); color:#fda4af; border:1px solid rgba(244,63,94,.35); }
+    .btn-toggle-bad:hover  { background:rgba(244,63,94,.3); box-shadow:0 3px 10px rgba(244,63,94,.3); }
+    .btn-edit   { background:rgba(245,158,11,.12); color:var(--gold-light); border:1px solid rgba(245,158,11,.3); }
+    .btn-edit:hover   { background:rgba(245,158,11,.25); }
+    .btn-delete { background:rgba(255,255,255,.06); color:var(--text-muted); border:1px solid var(--border); }
+    .btn-delete:hover { background:rgba(244,63,94,.2); color:#fda4af; border-color:rgba(244,63,94,.4); }
+    .empty-state { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-muted); }
+    .empty-state .empty-icon { font-size:56px; margin-bottom:14px; }
+    .empty-state h3 { font-size:1.1rem; font-weight:600; margin-bottom:6px; color:var(--text); }
+    .empty-state p  { font-size:.85rem; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position:fixed; inset:0; z-index:200;
+      background:rgba(0,0,0,.65); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+      display:flex; align-items:center; justify-content:center; padding:16px;
+      opacity:0; pointer-events:none; transition:opacity .25s;
+    }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal {
+      background:linear-gradient(145deg,#162040,#1a1035);
+      border:1px solid rgba(255,255,255,.12); border-radius:20px;
+      width:100%; max-width:560px; max-height:92vh; overflow-y:auto;
+      padding:32px; box-shadow:0 24px 60px rgba(0,0,0,.7);
+      transform:translateY(24px) scale(.97); transition:transform .3s, opacity .3s;
+    }
+    .modal-overlay.open .modal { transform:translateY(0) scale(1); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+    .modal-title  { font-size:1.2rem; font-weight:800; }
+    .modal-close {
+      background:var(--surface); border:1px solid var(--border); color:var(--text-muted);
+      border-radius:8px; width:34px; height:34px; display:grid; place-items:center;
+      cursor:pointer; font-size:18px; transition:background .2s, color .2s; flex-shrink:0;
+    }
+    .modal-close:hover { background:rgba(244,63,94,.2); color:#fda4af; border-color:rgba(244,63,94,.4); }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-col-2 { grid-column:1/-1; }
+    .form-group { display:flex; flex-direction:column; gap:7px; }
+    .form-label { font-size:.78rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); }
+    .form-input, .form-select {
+      background:rgba(255,255,255,.06); border:1px solid var(--border);
+      border-radius:9px; padding:10px 14px;
+      color:var(--text); font-family:inherit; font-size:.9rem;
+      transition:border-color .2s, background .2s;
+    }
+    .form-input:focus, .form-select:focus { outline:none; border-color:var(--teal); background:rgba(255,255,255,.09); }
+    .form-input.error { border-color:var(--rose); }
+    .form-select.error { border-color:var(--rose); }
+    .form-select option { background:#1e1035; }
+    .error-msg { font-size:.72rem; color:#fda4af; margin-top:-3px; display:none; }
+    .error-msg.show { display:block; }
+    .checkbox-group { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .checkbox-item {
+      display:flex; align-items:center; gap:8px; cursor:pointer;
+      font-size:.83rem; padding:8px 10px; border-radius:8px;
+      border:1px solid var(--border); transition:background .2s, border-color .2s;
+    }
+    .checkbox-item:hover { background:var(--surface-hover); border-color:rgba(244,63,94,.4); }
+    .checkbox-item input { accent-color:var(--rose); width:15px; height:15px; cursor:pointer; flex-shrink:0; }
+    .otro-input {
+      margin-top:8px;
+      background:rgba(255,255,255,.06); border:1px solid var(--border);
+      border-radius:9px; padding:9px 14px;
+      color:var(--text); font-family:inherit; font-size:.88rem;
+      transition:border-color .2s, background .2s; width:100%;
+      display:none;
+    }
+    .otro-input.show { display:block; }
+    .otro-input:focus { outline:none; border-color:var(--rose); background:rgba(255,255,255,.09); }
+    .fallas-section { display:none; }
+    .fallas-section.visible { display:block; }
+    .form-actions { display:flex; gap:10px; margin-top:6px; }
+    .btn-cancel {
+      flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text-muted);
+      border-radius:10px; padding:12px; font-family:inherit; font-size:.9rem; font-weight:600;
+      cursor:pointer; transition:background .2s;
+    }
+    .btn-cancel:hover { background:var(--surface-hover); color:var(--text); }
+    .btn-submit {
+      flex:2; background:linear-gradient(135deg,var(--teal),#065f5a); border:none; color:#fff;
+      border-radius:10px; padding:12px; font-family:inherit; font-size:.9rem; font-weight:700;
+      cursor:pointer; transition:transform .2s, box-shadow .2s;
+      box-shadow:0 4px 14px rgba(13,148,136,.35);
+    }
+    .btn-submit:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(13,148,136,.5); }
+    .btn-submit:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    /* ── TOAST ── */
+    .toast-container { position:fixed; bottom:28px; right:24px; z-index:500; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+    .toast {
+      background:rgba(22,32,64,.95); border:1px solid var(--border); border-radius:12px;
+      padding:14px 18px; font-size:.85rem; font-weight:500;
+      backdrop-filter:blur(12px); box-shadow:var(--shadow);
+      display:flex; align-items:center; gap:10px;
+      animation:toastIn .3s ease forwards; max-width:320px;
+    }
+    .toast.success { border-color:rgba(13,148,136,.5); color:var(--teal-light); }
+    .toast.error   { border-color:rgba(244,63,94,.5);  color:#fda4af; }
+    .toast.warning { border-color:rgba(245,158,11,.5); color:var(--gold-light); }
+    @keyframes toastIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.15); border-radius:10px; }
+
+    /* ══════════════════════════════════════
+       LOGIN SCREEN
+    ══════════════════════════════════════ */
+    #loginScreen {
+      position: fixed; inset: 0; z-index: 900;
+      background: linear-gradient(135deg, #0f1c35 0%, #1e0f3a 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; transition: opacity .4s;
+    }
+    #loginScreen.hide { opacity: 0; pointer-events: none; }
+    .login-card {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px; padding: 48px 40px 40px;
+      width: 100%; max-width: 440px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .login-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--teal), var(--gold), var(--rose));
+    }
+    .login-logo {
+      width: 72px; height: 72px; margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--gold), #b45309);
+      border-radius: 20px; display: grid; place-items: center; font-size: 34px;
+      box-shadow: 0 8px 28px rgba(245,158,11,0.45);
+    }
+    .login-title {
+      font-size: 1.4rem; font-weight: 800; margin-bottom: 4px;
+      background: linear-gradient(135deg, #e8eaf6, var(--gold-light));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .login-subtitle { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 36px; line-height: 1.5; }
+    .role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+    .role-btn {
+      border: 2px solid var(--border); border-radius: 14px; padding: 20px 12px;
+      background: var(--surface); cursor: pointer; transition: all .25s;
+      display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text);
+    }
+    .role-btn:hover { border-color: rgba(255,255,255,.25); background: var(--surface-hover); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+    .role-btn.selected-admin  { border-color: var(--gold); background: rgba(245,158,11,.12); box-shadow: 0 0 0 1px rgba(245,158,11,.3), 0 8px 24px rgba(245,158,11,.2); }
+    .role-btn.selected-student{ border-color: var(--teal); background: rgba(13,148,136,.12);  box-shadow: 0 0 0 1px rgba(13,148,136,.3),  0 8px 24px rgba(13,148,136,.2); }
+    .role-icon { font-size: 32px; }
+    .role-name { font-size: .88rem; font-weight: 700; }
+    .role-desc { font-size: .68rem; color: var(--text-muted); text-align: center; line-height: 1.4; }
+    .pwd-section { display: none; margin-bottom: 20px; animation: fadeIn .25s ease; }
+    .pwd-section.show { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+    .pwd-label { display: block; text-align: left; font-size: .76rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 8px; }
+    .pwd-wrap { position: relative; }
+    .pwd-input {
+      width: 100%; background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 44px 12px 14px; color: var(--text); font-family: inherit; font-size: .95rem;
+      transition: border-color .2s, background .2s; letter-spacing: 2px;
+    }
+    .pwd-input:focus { outline: none; border-color: var(--gold); background: rgba(255,255,255,.09); }
+    .pwd-input.error { border-color: var(--rose); animation: shake .3s ease; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+    .pwd-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 4px; transition: color .2s; }
+    .pwd-toggle:hover { color: var(--text); }
+    .pwd-error { text-align: left; font-size: .74rem; color: #fda4af; margin-top: 6px; display: none; }
+    .pwd-error.show { display: block; }
+    .btn-enter {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--teal), #065f5a);
+      border: none; border-radius: 12px; color: #fff;
+      font-family: inherit; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: transform .2s, box-shadow .2s, opacity .2s;
+      box-shadow: 0 4px 16px rgba(13,148,136,.4); margin-top: 4px;
+    }
+    .btn-enter:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13,148,136,.55); }
+    .btn-enter:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn-enter.gold { background: linear-gradient(135deg, var(--gold), #b45309); box-shadow: 0 4px 16px rgba(245,158,11,.4); }
+    .btn-enter.gold:hover { box-shadow: 0 8px 24px rgba(245,158,11,.55); }
+    .role-badge { display: flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 600; border-radius: 8px; padding: 6px 12px; border: 1px solid; white-space: nowrap; }
+    .role-badge.admin   { background: rgba(245,158,11,.12); color: var(--gold-light); border-color: rgba(245,158,11,.3); }
+    .role-badge.student { background: rgba(13,148,136,.12); color: var(--teal-light); border-color: rgba(13,148,136,.3); }
+    .btn-logout { background: rgba(244,63,94,.1); border: 1px solid rgba(244,63,94,.3); color: #fda4af; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: .74rem; font-weight: 600; cursor: pointer; transition: background .2s; white-space: nowrap; }
+    .btn-logout:hover { background: rgba(244,63,94,.25); }
+    #readonlyBanner { background: linear-gradient(135deg, rgba(13,148,136,.12), rgba(6,95,90,.08)); border-bottom: 1px solid rgba(13,148,136,.25); padding: 10px 32px; display: none; align-items: center; gap: 10px; font-size: .8rem; color: var(--teal-light); }
+    #readonlyBanner.show { display: flex; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .grades-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    }
+    @media (max-width: 600px) {
+      header { padding: 12px 14px; gap: 10px; }
+      header h1 { font-size: .85rem; }
+      header p { display: none; }
+      .header-icon { width: 40px; height: 40px; font-size: 20px; border-radius: 10px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-col-2 { grid-column: auto; }
+      .checkbox-group { grid-template-columns: 1fr; }
+      .modal { padding: 20px 16px; }
+      main { padding: 16px 12px 50px; }
+      .sync-indicator span { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .grades-grid { grid-template-columns: 1fr; }
+      .filters-row { gap: 6px; }
+      .filter-sep { display: none; }
+      .toast-container { right: 12px; bottom: 16px; left: 12px; }
+      .toast { max-width: 100%; }
+      #readonlyBanner { padding: 8px 14px; }
+    }
+    @media (max-width: 420px) {
+      .btn-add span { display: none; }
+      .role-selector { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .role-btn { padding: 14px 8px; }
+      .role-icon { font-size: 24px; }
+      .login-card { padding: 32px 18px 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🖥️</div>
+    <div class="login-title">Inventario Tecnológico</div>
+    <div class="login-subtitle">Complejo Educativo Caserío Llano Largo<br>Selecciona cómo deseas ingresar</div>
+    <div class="role-selector">
+      <button class="role-btn" id="roleAdminBtn" onclick="selectRole('admin')">
+        <span class="role-icon">🔐</span>
+        <span class="role-name">Administrador</span>
+        <span class="role-desc">Acceso total al sistema</span>
+      </button>
+      <button class="role-btn" id="roleStudentBtn" onclick="selectRole('student')">
+        <span class="role-icon">👁️</span>
+        <span class="role-name">Alumno</span>
+        <span class="role-desc">Solo lectura del inventario</span>
+      </button>
+    </div>
+    <div class="pwd-section" id="pwdSection">
+      <label class="pwd-label" id="userLabel" style="display:none">Correo institucional del alumno</label>
+      <input class="pwd-input" id="userInput" type="text" placeholder="19755306@clases.edu.sv" style="display:none; margin-bottom:10px;"
+             onkeydown="if(event.key==='Enter') doLogin()" />
+      <div class="pwd-hint" id="userHint" style="display:none; font-size:.8rem; color:var(--text-muted); margin-top:-6px; margin-bottom:10px;">Ejemplo: 19755306@clases.edu.sv</div>
+      <label class="pwd-label" id="pwdLabel">Contraseña de administrador</label>
+      <div class="pwd-wrap">
+        <input class="pwd-input" id="pwdInput" type="password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter') doLogin()" />
+        <button class="pwd-toggle" type="button" onclick="togglePwd()" id="pwdToggleBtn">👁</button>
+      </div>
+      <div class="pwd-error" id="pwdError">Credenciales incorrectas. Intenta de nuevo.</div>
+    </div>
+    <button class="btn-enter" id="btnEnter" onclick="doLogin()" disabled>
+      Selecciona un perfil para continuar
+    </button>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen">
+  <div class="loader-icon">🖥️</div>
+  <div class="loader-text">Conectando con la base de datos…</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- SETUP BANNER -->
+<div id="setupBanner">
+  <div class="setup-icon">⚙️</div>
+  <div class="setup-text">
+    <strong>Configura Firebase para activar la nube</strong>
+    <p>Reemplaza los datos de FIREBASE_CONFIG en el archivo. Ver instrucciones.</p>
+  </div>
+  <a class="setup-link" href="https://console.firebase.google.com" target="_blank">Ir a Firebase →</a>
+</div>
+
+<!-- READONLY BANNER -->
+<div id="readonlyBanner">
+  <span>👁️</span>
+  <strong>Modo alumno</strong>
+  <span style="color:var(--text-muted)">— Puedes editar registros y tus cambios quedarán registrados para el administrador.</span>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-icon">🖥️</div>
+  <div>
+    <h1>Complejo Educativo Caserío Llano Largo</h1>
+    <p>Sistema de Inventario de Equipos Tecnológicos</p>
+  </div>
+  <div class="header-spacer"></div>
+  <div class="sync-indicator" id="syncIndicator">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncLabel">Conectando…</span>
+  </div>
+  <div class="role-badge admin" id="roleBadge" style="display:none"></div>
+  <button class="btn-logout" id="btnLogout" style="display:none" onclick="logout()">Cerrar sesión</button>
+  <button class="btn-add" id="btnAdd" onclick="openModal()" disabled>
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    <span>Nuevo Equipo</span>
+  </button>
+  <button class="btn-add" id="btnCreateStudent" onclick="openCreateStudentAccount()" style="display:none; background:linear-gradient(135deg,var(--teal),#065f5a); color:#fff; box-shadow:0 4px 16px rgba(13,148,136,.3);">
+    <span>➕ Crear alumno</span>
+  </button>
+</header>
+
+<main>
+  <!-- ── DASHBOARD VIEW (por grados) ── -->
+  <div id="dashboardView">
+    <div class="stats-grid" id="statsGridDash"></div>
+    <div class="dashboard-section-title">
+      <span>📚</span> Inventario por Grado
+    </div>
+    <div class="grades-grid" id="gradesGrid"></div>
+    <div class="dashboard-section-title" style="margin-top:28px;">
+      <span>🔔</span> Alertas de cambios
+    </div>
+    <div class="cards-grid" id="auditList" style="grid-template-columns:1fr;"></div>
+    <button class="btn-view-all" onclick="showInventory(null)">📋 Ver todos los equipos</button>
+  </div>
+
+  <!-- ── INVENTORY VIEW (lista de equipos) ── -->
+  <div id="inventoryView">
+    <div class="breadcrumb-row" id="breadcrumbRow">
+      <button class="btn-back" onclick="backToDashboard()">← Volver al resumen</button>
+      <span class="breadcrumb-grade" id="breadcrumbGrade" style="display:none"></span>
+    </div>
+    <div class="stats-grid" id="statsGridInv"></div>
+    <div class="filters-row">
+      <span class="filter-label">Estado:</span>
+      <button class="filter-btn active" data-filter-estado="todos"     onclick="setFiltro('estado','todos',this)">Todos</button>
+      <button class="filter-btn"        data-filter-estado="bueno"     onclick="setFiltro('estado','bueno',this)">✅ Buen estado</button>
+      <button class="filter-btn"        data-filter-estado="dañado"    onclick="setFiltro('estado','dañado',this)">⚠️ Dañado</button>
+      <div class="filter-sep"></div>
+      <span class="filter-label">Tipo:</span>
+      <button class="filter-btn active" data-filter-tipo="todos"       onclick="setFiltro('tipo','todos',this)">Todos</button>
+      <button class="filter-btn"        data-filter-tipo="Tablet"      onclick="setFiltro('tipo','Tablet',this)">📱 Tablet</button>
+      <button class="filter-btn"        data-filter-tipo="Computadora" onclick="setFiltro('tipo','Computadora',this)">💻 Computadora</button>
+      <button class="filter-btn"        data-filter-tipo="No dispone de equipo informatico" onclick="setFiltro('tipo','No dispone de equipo informatico',this)">🚫 Sin equipo</button>
+      <div class="filter-sep"></div>
+      <div class="search-wrap">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-input" id="searchInput" type="text" placeholder="Buscar por nombre o correo…" oninput="renderCards()" />
+      </div>
+    </div>
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">➕ Registrar Equipo</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <form id="equipoForm" novalidate>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nombre del responsable *</label>
+          <input class="form-input" id="fNombre" type="text" placeholder="Ej: María López" />
+          <span class="error-msg" id="eNombre">Campo requerido</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Edad *</label>
+          <input class="form-input" id="fEdad" type="number" min="5" max="99" placeholder="Ej: 12" />
+          <span class="error-msg" id="eEdad">Ingresa una edad válida (5-99)</span>
+        </div>
+        <div class="form-group form-col-2">
+          <label class="form-label">Correo institucional *</label>
+          <input class="form-input" id="fCorreo" type="email" placeholder="usuario@institucion.edu.sv" />
+          <span class="error-msg" id="eCorreo">Correo inválido</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sexo *</label>
+          <select class="form-select" id="fSexo">
+            <option value="">Seleccionar…</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Femenino">Femenino</option>
+          </select>
+          <span class="error-msg" id="eSexo">Selecciona el sexo</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de equipo *</label>
+          <select class="form-select" id="fTipo" onchange="toggleTipo()">
+            <option value="">Seleccionar…</option>
+            <option value="Tablet">Tablet</option>
+            <option value="Computadora">Computadora</option>
+            <option value="No dispone de equipo informatico">No dispone de equipo informatico</option>
+          </select>
+          <span class="error-msg" id="eTipo">Selecciona el tipo</span>
+        </div>
+        <div class="form-group form-col-2">
+          <label class="form-label">Grado *</label>
+          <select class="form-select" id="fGrado">
+            <option value="">Seleccionar…</option>
+            <option value="Kinder 4">Kinder 4</option>
+            <option value="Kinder 5">Kinder 5</option>
+            <option value="Kinder 6">Kinder 6</option>
+            <option value="1° Grado">1° Grado</option>
+            <option value="2° Grado">2° Grado</option>
+            <option value="3° Grado">3° Grado</option>
+            <option value="4° Grado">4° Grado</option>
+            <option value="5° Grado">5° Grado</option>
+            <option value="6° Grado">6° Grado</option>
+            <option value="7° Grado">7° Grado</option>
+            <option value="8° Grado">8° Grado</option>
+            <option value="9° Grado">9° Grado</option>
+            <option value="1° Año General">1° Año General</option>
+            <option value="2° Año General">2° Año General</option>
+          </select>
+          <span class="error-msg" id="eGrado">Selecciona el grado</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sección *</label>
+          <select class="form-select" id="fSeccion">
+            <option value="">Seleccionar…</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+          <span class="error-msg" id="eSeccion">Selecciona la sección</span>
+        </div>
+        <div class="form-group form-col-2">
+          <label class="form-label">Estado *</label>
+          <select class="form-select" id="fEstado" onchange="toggleFallas()">
+            <option value="">Seleccionar…</option>
+            <option value="bueno">En buen estado</option>
+            <option value="dañado">Dañado</option>
+          </select>
+          <span class="error-msg" id="eEstado">Selecciona el estado</span>
+        </div>
+        <div class="form-group form-col-2 fallas-section" id="fallasSection">
+          <label class="form-label">Tipo de falla (selecciona las que apliquen) *</label>
+          <div class="checkbox-group" id="fallasCheckboxGroup">
+            <label class="checkbox-item"><input type="checkbox" value="No enciende" class="falla-chk"> No enciende</label>
+            <label class="checkbox-item"><input type="checkbox" value="Pantalla rota" class="falla-chk"> Pantalla rota</label>
+            <label class="checkbox-item"><input type="checkbox" value="Error en el correo institucional" class="falla-chk"> Error en el correo institucional</label>
+            <label class="checkbox-item"><input type="checkbox" value="Fallos en el sistema" class="falla-chk"> Fallos en el sistema</label>
+            <label class="checkbox-item" id="otroCheckboxItem">
+              <input type="checkbox" id="fallaOtroChk" class="falla-chk" value="__otro__" onchange="toggleOtroInput()"> Otro…
+            </label>
+          </div>
+          <input type="text" class="otro-input" id="otroInput" placeholder="Describe la falla personalizada…" maxlength="200" />
+          <span class="error-msg" id="eFallas">Selecciona al menos una falla</span>
+          <span class="error-msg" id="eOtro">Describe la falla personalizada</span>
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top:24px;">
+        <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn-submit" id="btnSubmit">
+          <span id="submitLabel">Guardar Equipo</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Firebase SDK v10 (módulos compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   🔐 CONTRASEÑA DE ADMINISTRADOR
+═══════════════════════════════════════════════════════════ */
+const ADMIN_PASSWORD = 'llano2024';
+
+/* ═══════════════════════════════════════════════════════════
+   🔥 FIREBASE CONFIG
+═══════════════════════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyAp0m60Eb6VTz_XeRy8xy1LERf6EtrxR0M",
+  authDomain:        "control-equiposinf.firebaseapp.com",
+  projectId:         "control-equiposinf",
+  storageBucket:     "control-equiposinf.firebasestorage.app",
+  messagingSenderId: "1075337744711",
+  appId:             "1:1075337744711:web:aa5bb0971399f16407bc62"
+};
+
+const IS_CONFIGURED = !FIREBASE_CONFIG.apiKey.startsWith("TU_");
+
+/* ════════════════════════════════
+   ESTADO GLOBAL
+════════════════════════════════ */
+let db          = null;
+let equipos     = [];
+let editId      = null;
+let filtros     = { estado: 'todos', tipo: 'todos' };
+let unsubscribe = null;
+let currentRole = null;
+let selectedRole = null;
+let currentUser = null;
+let currentView = 'dashboard'; // 'dashboard' | 'inventory'
+let currentGradeFilter = null; // null = todos | string = grado específico
+let auditorias = [];
+let auditUnsubscribe = null;
+
+/* ════════════════════════════════
+   LOGIN / ROLES
+════════════════════════════════ */
+function selectRole(role) {
+  selectedRole = role;
+  const adminBtn   = document.getElementById('roleAdminBtn');
+  const studentBtn = document.getElementById('roleStudentBtn');
+  const pwdSection = document.getElementById('pwdSection');
+  const btnEnter   = document.getElementById('btnEnter');
+  const pwdError   = document.getElementById('pwdError');
+  const userLabel  = document.getElementById('userLabel');
+  const userInput  = document.getElementById('userInput');
+  const pwdLabel   = document.getElementById('pwdLabel');
+
+  adminBtn.className   = 'role-btn' + (role === 'admin'   ? ' selected-admin'   : '');
+  studentBtn.className = 'role-btn' + (role === 'student' ? ' selected-student' : '');
+  pwdError.classList.remove('show');
+  document.getElementById('pwdInput').classList.remove('error');
+  userInput.classList.remove('error');
+
+  if (role === 'admin') {
+    pwdSection.classList.add('show');
+    userLabel.style.display = 'none';
+    userInput.style.display = 'none';
+    document.getElementById('userHint').style.display = 'none';
+    userInput.value = '';
+    pwdLabel.textContent = 'Contraseña de administrador';
+    btnEnter.textContent = 'Ingresar como Administrador';
+    btnEnter.className   = 'btn-enter gold';
+    btnEnter.disabled    = false;
+    setTimeout(() => document.getElementById('pwdInput').focus(), 100);
+  } else {
+    pwdSection.classList.add('show');
+    userLabel.style.display = 'block';
+    userInput.style.display = 'block';
+    document.getElementById('userHint').style.display = 'block';
+    document.getElementById('pwdInput').value = '';
+    pwdLabel.textContent = 'Contraseña del alumno';
+    btnEnter.textContent = 'Ingresar como Alumno';
+    btnEnter.className   = 'btn-enter';
+    btnEnter.disabled    = false;
+    setTimeout(() => userInput.focus(), 100);
+  }
+}
+
+function togglePwd() {
+  const inp = document.getElementById('pwdInput');
+  const btn = document.getElementById('pwdToggleBtn');
+  if (inp.type === 'password') { inp.type = 'text';     btn.textContent = '🙈'; }
+  else                         { inp.type = 'password'; btn.textContent = '👁';  }
+}
+
+async function doLogin() {
+  if (!selectedRole) return;
+
+  if (selectedRole === 'admin') {
+    const pwd = document.getElementById('pwdInput').value;
+    if (pwd !== ADMIN_PASSWORD) {
+      document.getElementById('pwdInput').classList.add('error');
+      document.getElementById('pwdError').classList.add('show');
+      document.getElementById('pwdInput').value = '';
+      setTimeout(() => document.getElementById('pwdInput').classList.remove('error'), 600);
+      return;
+    }
+    currentUser = { id: 'admin', nombre: 'Administrador', tipo: 'admin', usuario: 'admin' };
+  } else {
+    const correo = document.getElementById('userInput').value.trim().toLowerCase();
+    const pwd = document.getElementById('pwdInput').value;
+    if (!correo || !pwd) {
+      document.getElementById('userInput').classList.add('error');
+      document.getElementById('pwdInput').classList.add('error');
+      document.getElementById('pwdError').classList.add('show');
+      return;
+    }
+    if (!IS_CONFIGURED || !db) {
+      document.getElementById('pwdError').textContent = 'No hay conexión a Firebase para validar usuarios.';
+      document.getElementById('pwdError').classList.add('show');
+      return;
+    }
+    try {
+      const snap = await db.collection('usuarios').where('tipo', '==', 'student').where('password', '==', pwd).limit(20).get();
+      const doc = snap.docs.find(item => {
+        const data = item.data();
+        const usuario = (data.usuario || '').toLowerCase();
+        const institucional = (data.correoInstitucional || data.correo || '').toLowerCase();
+        return usuario === correo || institucional === correo;
+      });
+      if (!doc) {
+        document.getElementById('userInput').classList.add('error');
+        document.getElementById('pwdInput').classList.add('error');
+        document.getElementById('pwdError').classList.add('show');
+        document.getElementById('pwdInput').value = '';
+        return;
+      }
+      currentUser = { id: doc.id, ...doc.data(), tipo: 'student' };
+    } catch (err) {
+      console.error('Login student error:', err);
+      document.getElementById('pwdError').textContent = 'No se pudo validar el usuario.';
+      document.getElementById('pwdError').classList.add('show');
+      return;
+    }
+  }
+
+  currentRole = selectedRole;
+  sessionStorage.setItem('inv_role', currentRole);
+  if (currentUser) sessionStorage.setItem('inv_user', JSON.stringify(currentUser));
+
+  const ls = document.getElementById('loginScreen');
+  ls.classList.add('hide');
+  setTimeout(() => ls.style.display = 'none', 400);
+
+  applyRoleUI();
+  init();
+}
+
+function applyRoleUI() {
+  const isAdmin = currentRole === 'admin';
+
+  const badge = document.getElementById('roleBadge');
+  badge.style.display = 'flex';
+  badge.className = 'role-badge ' + (isAdmin ? 'admin' : 'student');
+  badge.textContent = isAdmin ? '🔐 Administrador' : `👁️ ${currentUser?.nombre || 'Alumno'}`;
+
+  document.getElementById('btnLogout').style.display = 'flex';
+
+  const btnAdd = document.getElementById('btnAdd');
+  const btnCreateStudent = document.getElementById('btnCreateStudent');
+  btnAdd.style.display = isAdmin ? 'flex' : 'none';
+  btnCreateStudent.style.display = isAdmin ? 'flex' : 'none';
+
+  const readonlyBanner = document.getElementById('readonlyBanner');
+  if (!isAdmin) readonlyBanner.classList.add('show');
+  else readonlyBanner.classList.remove('show');
+}
+
+function logout() {
+  sessionStorage.removeItem('inv_role');
+  sessionStorage.removeItem('inv_user');
+  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  if (auditUnsubscribe) { auditUnsubscribe(); auditUnsubscribe = null; }
+  currentRole = null; selectedRole = null; currentUser = null;
+  currentView = 'dashboard'; currentGradeFilter = null;
+  document.getElementById('roleBadge').style.display  = 'none';
+  document.getElementById('btnLogout').style.display  = 'none';
+  document.getElementById('btnAdd').style.display     = '';
+  document.getElementById('btnAdd').disabled          = true;
+  document.getElementById('readonlyBanner').classList.remove('show');
+  document.getElementById('setupBanner').classList.remove('show');
+  document.getElementById('roleAdminBtn').className  = 'role-btn';
+  document.getElementById('roleStudentBtn').className = 'role-btn';
+  document.getElementById('pwdSection').classList.remove('show');
+  document.getElementById('pwdInput').value           = '';
+  document.getElementById('pwdError').classList.remove('show');
+  document.getElementById('btnEnter').disabled        = true;
+  document.getElementById('btnEnter').textContent     = 'Selecciona un perfil para continuar';
+  document.getElementById('btnEnter').className       = 'btn-enter';
+  const ls = document.getElementById('loginScreen');
+  ls.style.display = 'flex';
+  ls.style.opacity = '0';
+  ls.classList.remove('hide');
+  requestAnimationFrame(() => { ls.style.transition = 'opacity .3s'; ls.style.opacity = '1'; });
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+function init() {
+  if (!IS_CONFIGURED) {
+    document.getElementById('setupBanner').classList.add('show');
+    setSyncStatus('offline', 'Sin conexión');
+    equipos = [];
+    hideLoader();
+    if (currentRole === 'admin') document.getElementById('btnAdd').disabled = false;
+    showDashboard();
+    return;
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    setSyncStatus('syncing', 'Conectando…');
+    subscribeToFirestore();
+    subscribeToAuditoria();
+  } catch(err) {
+    console.error('Firebase init error:', err);
+    setSyncStatus('offline', 'Error de conexión');
+    equipos = [];
+    hideLoader();
+    if (currentRole === 'admin') document.getElementById('btnAdd').disabled = false;
+    toast('⚠️ No se pudo conectar a Firebase', 'warning');
+    showDashboard();
+  }
+}
+
+/* ════════════════════════════════
+   FIRESTORE
+════════════════════════════════ */
+function subscribeToFirestore() {
+  if (unsubscribe) unsubscribe();
+  unsubscribe = db.collection('equipos')
+    .orderBy('creadoEn', 'desc')
+    .onSnapshot(
+      snapshot => {
+        equipos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        refreshCurrentView();
+        setSyncStatus('online', 'En línea · tiempo real');
+        hideLoader();
+        if (currentRole === 'admin') document.getElementById('btnAdd').disabled = false;
+      },
+      err => {
+        console.error('Firestore error:', err);
+        setSyncStatus('offline', 'Sin conexión');
+        equipos = [];
+        refreshCurrentView();
+        hideLoader();
+        if (currentRole === 'admin') document.getElementById('btnAdd').disabled = false;
+        toast('⚠️ Sin conexión con Firebase', 'warning');
+      }
+    );
+}
+
+function subscribeToAuditoria() {
+  if (auditUnsubscribe) auditUnsubscribe();
+  auditUnsubscribe = db.collection('auditorias')
+    .orderBy('fecha', 'desc')
+    .limit(10)
+    .onSnapshot(
+      snapshot => {
+        auditorias = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (currentRole === 'admin') renderAuditFeed();
+      },
+      err => {
+        console.error('Auditoría error:', err);
+      }
+    );
+}
+
+/* ════════════════════════════════
+   CRUD FIRESTORE
+════════════════════════════════ */
+async function addEquipo(data) {
+  if (!IS_CONFIGURED || !db) {
+    toast('⚠️ No hay conexión a Firebase para guardar', 'warning');
+    return;
+  }
+  setSyncStatus('syncing', 'Guardando…');
+  try {
+    const docRef = await db.collection('equipos').add({ ...data, creadoEn: firebase.firestore.FieldValue.serverTimestamp() });
+    await registrarAuditoria('crear', { id: docRef.id, nombre: data.nombre }, [{ campo: 'registro', valor: 'Se registró un nuevo equipo' }]);
+    toast('✅ Equipo registrado en Firebase', 'success');
+  } catch(e) {
+    setSyncStatus('offline', 'Error al guardar');
+    toast('❌ Error al guardar: ' + e.message, 'error');
+  }
+}
+
+async function updateEquipo(id, data) {
+  if (!IS_CONFIGURED || !db) {
+    toast('⚠️ No hay conexión a Firebase para actualizar', 'warning');
+    return;
+  }
+  const prev = equipos.find(e => e.id === id);
+  setSyncStatus('syncing', 'Actualizando…');
+  try {
+    await db.collection('equipos').doc(id).update({ ...data, actualizadoEn: firebase.firestore.FieldValue.serverTimestamp() });
+    const cambios = compararCambios(prev, data);
+    await registrarAuditoria('editar', { id, nombre: data.nombre || prev?.nombre || 'Equipo' }, cambios);
+    toast('✏️ Equipo actualizado en Firebase', 'success');
+  } catch(e) {
+    setSyncStatus('offline', 'Error al actualizar');
+    toast('❌ Error al actualizar: ' + e.message, 'error');
+  }
+}
+
+async function deleteEquipoById(id) {
+  if (!IS_CONFIGURED || !db) {
+    toast('⚠️ No hay conexión a Firebase para eliminar', 'warning');
+    return;
+  }
+  const prev = equipos.find(e => e.id === id);
+  setSyncStatus('syncing', 'Eliminando…');
+  try {
+    await db.collection('equipos').doc(id).delete();
+    await registrarAuditoria('eliminar', { id, nombre: prev?.nombre || 'Equipo' }, [{ campo: 'registro', valor: 'Se eliminó el equipo' }]);
+    toast('🗑️ Equipo eliminado de Firebase', 'warning');
+  } catch(e) {
+    setSyncStatus('offline', 'Error al eliminar');
+    toast('❌ Error al eliminar: ' + e.message, 'error');
+  }
+}
+
+function compararCambios(prev, next) {
+  if (!prev) return [{ campo: 'registro', valor: 'Se creó el registro' }];
+  const cambios = [];
+  const campos = ['nombre','edad','correo','sexo','tipo','grado','seccion','estado'];
+  campos.forEach(campo => {
+    if (prev[campo] !== next[campo]) {
+      cambios.push({ campo, valor: `${prev[campo] ?? '—'} → ${next[campo] ?? '—'}` });
+    }
+  });
+  const fallasPrev = (prev.fallas || []).join(', ');
+  const fallasNext = (next.fallas || []).join(', ');
+  if (fallasPrev !== fallasNext) {
+    cambios.push({ campo: 'fallas', valor: `${fallasPrev || '—'} → ${fallasNext || '—'}` });
+  }
+  return cambios.length ? cambios : [{ campo: 'registro', valor: 'Se actualizó el registro' }];
+}
+
+async function registrarAuditoria(accion, equipo, cambios) {
+  if (!IS_CONFIGURED || !db) return;
+  try {
+    await db.collection('auditorias').add({
+      accion,
+      equipoId: equipo?.id || null,
+      equipoNombre: equipo?.nombre || 'Equipo',
+      cambios: cambios || [],
+      usuarioId: currentUser?.id || null,
+      usuarioNombre: currentUser?.nombre || currentUser?.usuario || 'Sistema',
+      tipoUsuario: currentUser?.tipo || currentRole || 'desconocido',
+      fecha: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error('Auditoría error:', err);
+  }
+}
+
+async function openCreateStudentAccount() {
+  if (!IS_CONFIGURED || !db) {
+    toast('⚠️ No hay conexión a Firebase para crear cuentas', 'warning');
+    return;
+  }
+  const correo = prompt('Correo institucional del alumno');
+  const password = prompt('Contraseña temporal del alumno');
+  if (!correo || !password) return;
+  const correoTrim = correo.trim().toLowerCase();
+  const passwordTrim = password.trim();
+  if (!correoTrim || !passwordTrim) return;
+  try {
+    const existing = await db.collection('usuarios').where('correoInstitucional', '==', correoTrim).limit(1).get();
+    if (!existing.empty) {
+      alert('Ese correo institucional ya existe. Elige otro.');
+      return;
+    }
+    await db.collection('usuarios').add({
+      tipo: 'student',
+      usuario: correoTrim,
+      correoInstitucional: correoTrim,
+      password: passwordTrim,
+      nombre: correoTrim,
+      creadoPor: currentUser?.nombre || 'Administrador',
+      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('✅ Cuenta de alumno creada en Firebase', 'success');
+  } catch (err) {
+    console.error('Crear usuario error:', err);
+    toast('❌ No se pudo crear la cuenta', 'error');
+  }
+}
+
+/* ════════════════════════════════
+   UI HELPERS
+════════════════════════════════ */
+function setSyncStatus(status, label) {
+  document.getElementById('syncDot').className     = 'sync-dot ' + status;
+  document.getElementById('syncLabel').textContent = label;
+}
+function hideLoader() {
+  const el = document.getElementById('loadingScreen');
+  el.style.opacity    = '0';
+  el.style.transition = 'opacity .5s';
+  setTimeout(() => el.style.display = 'none', 500);
+}
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatDate(val) {
+  if (!val) return '';
+  const d = val.toDate ? val.toDate() : new Date(val);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('es-SV', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function refreshCurrentView() {
+  if (currentView === 'dashboard') {
+    showDashboard();
+  } else {
+    renderStats(currentGradeFilter);
+    renderCards();
+  }
+}
+
+/* ════════════════════════════════
+   VIEW SWITCHING
+════════════════════════════════ */
+function showDashboard() {
+  currentView = 'dashboard';
+  currentGradeFilter = null;
+  document.getElementById('dashboardView').classList.add('active');
+  document.getElementById('inventoryView').classList.remove('active');
+  renderDashboard();
+}
+
+function showInventory(gradeFilter) {
+  currentView = 'inventory';
+  currentGradeFilter = gradeFilter;
+  document.getElementById('dashboardView').classList.remove('active');
+  document.getElementById('inventoryView').classList.add('active');
+
+  // Reset filters
+  filtros = { estado: 'todos', tipo: 'todos' };
+  document.querySelectorAll('[data-filter-estado],[data-filter-tipo]').forEach(b => {
+    b.classList.toggle('active',
+      b.dataset.filterEstado === 'todos' || b.dataset.filterTipo === 'todos'
+    );
+  });
+  document.getElementById('searchInput').value = '';
+
+  // Breadcrumb
+  const breadcrumbGrade = document.getElementById('breadcrumbGrade');
+  if (gradeFilter) {
+    breadcrumbGrade.style.display = 'inline-flex';
+    breadcrumbGrade.textContent   = '📚 ' + gradeFilter;
+  } else {
+    breadcrumbGrade.style.display = 'none';
+  }
+
+  renderStats(gradeFilter);
+  renderCards();
+}
+
+function backToDashboard() {
+  showDashboard();
+}
+
+/* ════════════════════════════════
+   DASHBOARD: RENDER
+════════════════════════════════ */
+
+// Orden canónico de grados
+const GRADOS_ORDER = [
+  'Kinder 4','Kinder 5','Kinder 6',
+  '1° Grado','2° Grado','3° Grado','4° Grado','5° Grado','6° Grado',
+  '7° Grado','8° Grado','9° Grado',
+  '1° Año General','2° Año General'
+];
+
+function renderDashboard() {
+  // Stats globales
+  renderStats(null, 'statsGridDash');
+  renderAuditFeed();
+
+  // Construir datos por grado
+  const gradoMap = {};
+  equipos.forEach(e => {
+    const g = e.grado || '(Sin grado)';
+    if (!gradoMap[g]) gradoMap[g] = { total: 0, buenos: 0, danados: 0 };
+    gradoMap[g].total++;
+    if (e.estado === 'bueno')  gradoMap[g].buenos++;
+    if (e.estado === 'dañado') gradoMap[g].danados++;
+  });
+
+  // Ordenar grados según orden canónico, desconocidos al final
+  const gradosConDatos = Object.keys(gradoMap).sort((a, b) => {
+    const ia = GRADOS_ORDER.indexOf(a);
+    const ib = GRADOS_ORDER.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+
+  const grid = document.getElementById('gradesGrid');
+  if (!gradosConDatos.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);">
+      <div style="font-size:48px; margin-bottom:12px;">📭</div>
+      <p>No hay equipos registrados todavía.</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = gradosConDatos.map(g => {
+    const d = gradoMap[g];
+    const pct = d.total > 0 ? Math.round((d.buenos / d.total) * 100) : 0;
+    return `
+      <div class="grade-card" onclick="showInventory('${escHtml(g).replace(/'/g,"\\'")}')">
+        <div class="grade-card-name">📚 ${escHtml(g)}</div>
+        <div class="grade-card-total">${d.total}</div>
+        <div class="grade-card-detail">
+          <span class="gcd-good">✅ ${d.buenos} buen estado</span>
+          <span class="gcd-bad">⚠️ ${d.danados} dañados</span>
+        </div>
+        <div class="grade-progress-bar">
+          <div class="grade-progress-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="grade-card-sub">${pct}% en buen estado</div>
+      </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   STATS
+════════════════════════════════ */
+function renderStats(gradeFilter, targetId) {
+  const src    = gradeFilter ? equipos.filter(e => e.grado === gradeFilter) : equipos;
+  const gridId = targetId || 'statsGridInv';
+  const total      = src.length;
+  const buenos     = src.filter(e => e.estado === 'bueno').length;
+  const danados    = src.filter(e => e.estado === 'dañado').length;
+  const tablets    = src.filter(e => e.tipo   === 'Tablet').length;
+  const compus     = src.filter(e => e.tipo   === 'Computadora').length;
+  const sinEquipo  = src.filter(e => e.tipo   === 'No dispone de equipo informatico').length;
+  const defs = [
+    { icon:'📦', value:total,      label:'Total Equipos',         accent:'#0d9488' },
+    { icon:'✅', value:buenos,     label:'Buen Estado',           accent:'#0d9488' },
+    { icon:'⚠️', value:danados,    label:'Dañados',               accent:'#f43f5e' },
+    { icon:'📱', value:tablets,    label:'Tablets',               accent:'#818cf8' },
+    { icon:'💻', value:compus,     label:'Computadoras',          accent:'#f59e0b' },
+    { icon:'🚫', value:sinEquipo,  label:'Sin equipo',            accent:'#f43f5e' },
+  ];
+  const el = document.getElementById(gridId);
+  if (el) el.innerHTML = defs.map(s => `
+    <div class="stat-card" style="--accent:${s.accent}">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`).join('');
+}
+
+/* ════════════════════════════════
+   FILTERS
+════════════════════════════════ */
+function setFiltro(key, val, btn) {
+  filtros[key] = val;
+  document.querySelectorAll(`[data-filter-${key}]`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+function filteredEquipos() {
+  const q  = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  let src  = currentGradeFilter ? equipos.filter(e => e.grado === currentGradeFilter) : equipos;
+  return src.filter(e => {
+    const mE = filtros.estado === 'todos' || e.estado === filtros.estado;
+    const mT = filtros.tipo   === 'todos' || e.tipo   === filtros.tipo;
+    const mS = !q || e.nombre.toLowerCase().includes(q) || e.correo.toLowerCase().includes(q);
+    return mE && mT && mS;
+  });
+}
+
+/* ════════════════════════════════
+   RENDER CARDS
+════════════════════════════════ */
+function renderAuditFeed() {
+  const el = document.getElementById('auditList');
+  if (!el) return;
+  if (currentRole !== 'admin') {
+    el.innerHTML = '';
+    return;
+  }
+  if (!auditorias.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:20px 0; grid-column:1/-1;"><p>No hay alertas todavía.</p></div>';
+    return;
+  }
+  el.innerHTML = auditorias.map(a => {
+    const fecha = a.fecha?.toDate ? a.fecha.toDate() : new Date();
+    const fechaTxt = fecha.toLocaleString('es-SV', { dateStyle: 'short', timeStyle: 'short' });
+    const cambiosTxt = (a.cambios || []).slice(0, 3).map(c => `${c.campo}: ${c.valor}`).join(' • ');
+    return `<div style="padding:10px 12px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px; background:rgba(255,255,255,.04);">
+      <div style="font-size:.8rem; font-weight:700; color:var(--gold-light);">${escHtml(a.accion.toUpperCase())}</div>
+      <div style="font-size:.78rem; color:var(--text-muted); margin-top:4px;">${escHtml(a.usuarioNombre)} · ${escHtml(a.equipoNombre)} · ${fechaTxt}</div>
+      <div style="font-size:.76rem; color:var(--text); margin-top:5px;">${escHtml(cambiosTxt)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCards() {
+  const list    = filteredEquipos();
+  const grid    = document.getElementById('cardsGrid');
+  const isAdmin = currentRole === 'admin';
+  const canEdit = isAdmin || currentRole === 'student';
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>Sin resultados</h3>
+      <p>No hay equipos que coincidan con los filtros seleccionados.</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = list.map(e => {
+    const isBueno  = e.estado === 'bueno';
+    const isMasc   = e.sexo   === 'Masculino';
+    const tipo     = e.tipo || '';
+    const isTablet = tipo === 'Tablet';
+    const isComputer = tipo === 'Computadora';
+    const isSinEquipo = tipo === 'No dispone de equipo informatico';
+    const tipoBadgeClass = isTablet ? 'badge-type-tablet' : isComputer ? 'badge-type-computer' : 'badge-type-none';
+    const tipoBadgeIcon = isTablet ? '📱' : isComputer ? '💻' : '🚫';
+    const fallasHTML = (e.fallas && e.fallas.length)
+      ? `<div class="card-fallas">
+           <div class="card-fallas-title">⚡ Fallas detectadas</div>
+           ${e.fallas.map(f=>`<div class="falla-item">▸ ${escHtml(f)}</div>`).join('')}
+         </div>` : '';
+    const dateStr   = formatDate(e.creadoEn);
+    const toggleLbl = isBueno ? '⚠️ Marcar dañado' : '✅ Marcar en buen estado';
+    const toggleCls = isBueno ? 'btn-toggle-bad' : 'btn-toggle-good';
+
+    const gradoBadge = e.grado ? `<span class="badge badge-grade">📚 ${escHtml(e.grado)}</span>` : '';
+    const seccionBadge = e.seccion ? `<span class="badge badge-grade">🏷️ Sección ${escHtml(e.seccion)}</span>` : '';
+
+    const actionsHTML = isAdmin
+      ? `<div class="card-actions">
+           <button class="btn-sm ${toggleCls}" onclick="toggleEstado('${e.id}')">${toggleLbl}</button>
+           <button class="btn-sm btn-edit"   onclick="openEdit('${e.id}')">✏️ Editar</button>
+           <button class="btn-sm btn-delete" onclick="confirmDelete('${e.id}')">🗑️</button>
+         </div>`
+      : canEdit
+        ? `<div class="card-actions">
+             <button class="btn-sm btn-edit" onclick="openEdit('${e.id}')">✏️ Editar</button>
+           </div>`
+        : `<div class="card-actions" style="pointer-events:none;opacity:.45;user-select:none;">
+             <div class="btn-sm ${toggleCls}" style="cursor:default;">🔒 Solo lectura</div>
+           </div>`;
+
+    return `
+    <div class="equipo-card" data-id="${e.id}">
+      <div class="card-header">
+        <div class="card-avatar ${isMasc?'':'fem'}">${isMasc?'👨':'👩'}</div>
+        <div>
+          <div class="card-name">${escHtml(e.nombre)}</div>
+          <div class="card-email">${escHtml(e.correo)}</div>
+          ${dateStr ? `<div class="card-date">📅 ${dateStr}</div>` : ''}
+        </div>
+      </div>
+      <div class="card-meta">
+        <span class="badge ${tipoBadgeClass}">${tipoBadgeIcon} ${escHtml(e.tipo || 'Sin equipo')}</span>
+        <span class="badge ${isBueno?'badge-good':'badge-bad'}">${isBueno?'✅ Buen estado':'⚠️ Dañado'}</span>
+        ${gradoBadge}
+        ${seccionBadge}
+        <span class="badge badge-sex">${escHtml(e.sexo)}</span>
+        <span class="badge badge-age">🎂 ${escHtml(String(e.edad))} años</span>
+      </div>
+      ${fallasHTML}
+      ${actionsHTML}
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   ACCIONES (solo admin)
+════════════════════════════════ */
+function toggleEstado(id) {
+  if (currentRole !== 'admin') return;
+  const eq = equipos.find(e => e.id === id);
+  if (!eq) return;
+  if (eq.estado === 'dañado') updateEquipo(id, { estado: 'bueno', fallas: [] });
+  else openEdit(id, true);
+}
+function confirmDelete(id) {
+  if (currentRole !== 'admin') return;
+  const eq = equipos.find(e => e.id === id);
+  if (!eq) return;
+  if (!confirm(`¿Eliminar el equipo de "${eq.nombre}"? Esta acción no se puede deshacer.`)) return;
+  deleteEquipoById(id);
+}
+
+/* ════════════════════════════════
+   MODAL
+════════════════════════════════ */
+function openModal(forceDañado = false) {
+  if (currentRole !== 'admin') return;
+  editId = null; resetForm();
+  if (forceDañado) { document.getElementById('fEstado').value = 'dañado'; toggleFallas(); }
+  // Pre-fill grade if viewing a specific grade
+  if (currentGradeFilter) {
+    document.getElementById('fGrado').value = currentGradeFilter;
+  }
+  toggleTipo();
+  document.getElementById('modalTitle').textContent  = '➕ Registrar Equipo';
+  document.getElementById('submitLabel').textContent = 'Guardar Equipo';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openEdit(id, forceDañado = false) {
+  if (currentRole !== 'admin' && currentRole !== 'student') return;
+  const eq = equipos.find(e => e.id === id);
+  if (!eq) return;
+  editId = id; resetForm();
+  document.getElementById('fNombre').value = eq.nombre;
+  document.getElementById('fEdad').value   = eq.edad;
+  document.getElementById('fCorreo').value = eq.correo;
+  document.getElementById('fSexo').value   = eq.sexo;
+  document.getElementById('fTipo').value   = eq.tipo;
+  toggleTipo();
+  document.getElementById('fGrado').value  = eq.grado || '';
+  document.getElementById('fSeccion').value = eq.seccion || '';
+  const estado = forceDañado ? 'dañado' : eq.estado;
+  document.getElementById('fEstado').value = estado;
+  toggleFallas();
+  if (estado === 'dañado' && eq.fallas) {
+    // Separate known fallas from custom ones
+    const knownValues = ['No enciende','Pantalla rota','Error en el correo institucional','Fallos en el sistema'];
+    eq.fallas.forEach(f => {
+      if (knownValues.includes(f)) {
+        const chk = document.querySelector(`.falla-chk[value="${f}"]`);
+        if (chk) chk.checked = true;
+      } else {
+        // Custom falla
+        document.getElementById('fallaOtroChk').checked = true;
+        document.getElementById('otroInput').value = f;
+        document.getElementById('otroInput').classList.add('show');
+      }
+    });
+  }
+  document.getElementById('modalTitle').textContent  = '✏️ Editar Equipo';
+  document.getElementById('submitLabel').textContent = 'Actualizar Equipo';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editId = null;
+}
+
+function toggleTipo() {
+  const tipo = document.getElementById('fTipo').value;
+  const estadoEl = document.getElementById('fEstado');
+  const estadoValor = estadoEl.value;
+  if (tipo === 'No dispone de equipo informatico') {
+    estadoEl.value = '';
+    estadoEl.disabled = true;
+    toggleFallas();
+  } else {
+    estadoEl.disabled = false;
+    if (!estadoValor) estadoEl.value = '';
+  }
+}
+
+function toggleFallas() {
+  const estado = document.getElementById('fEstado').value;
+  const sec    = document.getElementById('fallasSection');
+  if (estado === 'dañado') {
+    sec.classList.add('visible');
+  } else {
+    sec.classList.remove('visible');
+    document.querySelectorAll('.falla-chk').forEach(c => c.checked = false);
+    document.getElementById('otroInput').classList.remove('show');
+    document.getElementById('otroInput').value = '';
+  }
+}
+
+function toggleOtroInput() {
+  const chk   = document.getElementById('fallaOtroChk');
+  const input = document.getElementById('otroInput');
+  if (chk.checked) {
+    input.classList.add('show');
+    input.focus();
+  } else {
+    input.classList.remove('show');
+    input.value = '';
+  }
+}
+
+function resetForm() {
+  document.getElementById('equipoForm').reset();
+  document.querySelectorAll('.form-input,.form-select').forEach(el => el.classList.remove('error'));
+  document.querySelectorAll('.error-msg').forEach(el => el.classList.remove('show'));
+  document.getElementById('fallasSection').classList.remove('visible');
+  document.getElementById('otroInput').classList.remove('show');
+  document.getElementById('otroInput').value = '';
+}
+
+function showErr(f,e)  { document.getElementById(f).classList.add('error');    document.getElementById(e).classList.add('show'); }
+function clearErr(f,e) { document.getElementById(f).classList.remove('error'); document.getElementById(e).classList.remove('show'); }
+
+/* ════════════════════════════════
+   FORM SUBMIT
+════════════════════════════════ */
+document.getElementById('equipoForm').addEventListener('submit', async function(ev) {
+  ev.preventDefault();
+  if (currentRole !== 'admin' && currentRole !== 'student') return;
+
+  let valid  = true;
+  const nombre = document.getElementById('fNombre').value.trim();
+  const edad   = parseInt(document.getElementById('fEdad').value);
+  const correo = document.getElementById('fCorreo').value.trim();
+  const sexo     = document.getElementById('fSexo').value;
+  const tipo     = document.getElementById('fTipo').value;
+  const grado    = document.getElementById('fGrado').value;
+  const seccion  = document.getElementById('fSeccion').value;
+  const estado   = document.getElementById('fEstado').value;
+
+  // Collect fallas
+  let fallas = [];
+  if (estado === 'dañado') {
+    // Known checkboxes (excluding __otro__)
+    fallas = [...document.querySelectorAll('.falla-chk:checked')]
+      .map(c => c.value)
+      .filter(v => v !== '__otro__');
+
+    // Custom falla
+    const otroChk   = document.getElementById('fallaOtroChk');
+    const otroInput = document.getElementById('otroInput');
+    if (otroChk.checked) {
+      const otroVal = otroInput.value.trim();
+      if (!otroVal) {
+        document.getElementById('eOtro').classList.add('show');
+        valid = false;
+      } else {
+        document.getElementById('eOtro').classList.remove('show');
+        fallas.push(otroVal);
+      }
+    } else {
+      document.getElementById('eOtro').classList.remove('show');
+    }
+  }
+
+  if (!nombre)                             { showErr('fNombre','eNombre'); valid=false; } else clearErr('fNombre','eNombre');
+  if (isNaN(edad)||edad<5||edad>99)        { showErr('fEdad','eEdad');     valid=false; } else clearErr('fEdad','eEdad');
+  if (!correo||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { showErr('fCorreo','eCorreo'); valid=false; } else clearErr('fCorreo','eCorreo');
+  if (!sexo)                               { showErr('fSexo','eSexo');     valid=false; } else clearErr('fSexo','eSexo');
+  if (!tipo)                               { showErr('fTipo','eTipo');     valid=false; } else clearErr('fTipo','eTipo');
+  if (!grado)                              { showErr('fGrado','eGrado');   valid=false; } else clearErr('fGrado','eGrado');
+  if (!seccion)                            { showErr('fSeccion','eSeccion'); valid=false; } else clearErr('fSeccion','eSeccion');
+  if (tipo !== 'No dispone de equipo informatico') {
+    if (!estado)                           { showErr('fEstado','eEstado'); valid=false; } else clearErr('fEstado','eEstado');
+  } else {
+    clearErr('fEstado','eEstado');
+  }
+  if (estado==='dañado' && !fallas.length && valid) {
+    document.getElementById('eFallas').classList.add('show'); valid=false;
+  } else {
+    document.getElementById('eFallas').classList.remove('show');
+  }
+  if (!valid) return;
+
+  const recordEstado = tipo === 'No dispone de equipo informatico' ? 'sin equipo' : estado;
+  const data = { nombre, edad, correo, sexo, tipo, grado, seccion, estado: recordEstado, fallas: estado==='dañado' ? fallas : [] };
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  document.getElementById('submitLabel').textContent = 'Guardando…';
+
+  if (editId) {
+    await updateEquipo(editId, data);
+  } else if (currentRole === 'admin') {
+    await addEquipo(data);
+  } else {
+    toast('⚠️ Solo el administrador puede registrar nuevos equipos.', 'warning');
+    btn.disabled = false;
+    document.getElementById('submitLabel').textContent = 'Guardar Equipo';
+    return;
+  }
+
+  btn.disabled = false;
+  closeModal();
+});
+
+/* ════════════════════════════════
+   TOAST
+════════════════════════════════ */
+function toast(msg, type='success') {
+  const cont = document.getElementById('toastContainer');
+  const el   = document.createElement('div');
+  el.className   = `toast ${type}`;
+  el.textContent = msg;
+  cont.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 3500);
+}
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+/* ════════════════════════════════
+   ARRANQUE
+════════════════════════════════ */
+document.getElementById('loadingScreen').style.display = 'none';
+</script>
+</body>
+</html>
