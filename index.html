@@ -1114,7 +1114,9 @@ function showInventory(gradeFilter, summaryFilter = null) {
     const titles = {
       sinEquipo: '🚫 Estudiantes sin equipo',
       sinTablet: '📱 Estudiantes sin tablet',
-      sinComputadora: '💻 Estudiantes sin computadora'
+      sinComputadora: '💻 Estudiantes sin computadora',
+      Tablet: '📱 Estudiantes con tablet',
+      Computadora: '💻 Estudiantes con computadora'
     };
     breadcrumbGrade.style.display = 'inline-flex';
     breadcrumbGrade.textContent   = titles[currentSummaryFilter] || '📚 Inventario';
@@ -1216,6 +1218,10 @@ function getSummarySource(gradeFilter) {
   let src = gradeFilter ? equipos.filter(e => e.grado === gradeFilter) : equipos;
   if (currentSummaryFilter === 'sinEquipo') {
     src = src.filter(e => e.tipo === 'No dispone de equipo informatico');
+  } else if (currentSummaryFilter === 'Tablet') {
+    src = src.filter(e => e.tipo === 'Tablet');
+  } else if (currentSummaryFilter === 'Computadora') {
+    src = src.filter(e => e.tipo === 'Computadora');
   } else if (currentSummaryFilter === 'sinTablet') {
     src = src.filter(e => e.tipo !== 'Tablet');
   } else if (currentSummaryFilter === 'sinComputadora') {
@@ -1237,8 +1243,8 @@ function renderStats(gradeFilter, targetId) {
     { icon:'📦', value:total,      label:'Total Equipos',         accent:'#0d9488' },
     { icon:'✅', value:buenos,     label:'Buen Estado',           accent:'#0d9488' },
     { icon:'⚠️', value:danados,    label:'Dañados',               accent:'#f43f5e' },
-    { icon:'📱', value:tablets,    label:'Tablets',               accent:'#818cf8' },
-    { icon:'💻', value:compus,     label:'Computadoras',          accent:'#f59e0b' },
+    { icon:'📱', value:tablets,    label:'Tablets',               accent:'#818cf8', action:'Tablet' },
+    { icon:'💻', value:compus,     label:'Computadoras',          accent:'#f59e0b', action:'Computadora' },
     { icon:'🚫', value:sinEquipo,  label:'Sin equipo',            accent:'#f43f5e', action:'sinEquipo' },
   ];
   const el = document.getElementById(gridId);
