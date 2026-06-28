@@ -40,6 +40,7 @@
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 20px;
     }
+    #loginScreen { display: none; }
     .loader-icon { font-size: 52px; animation: pulse 1.4s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.15);opacity:.7} }
     .loader-text { font-size: 1rem; font-weight: 600; color: var(--text-muted); letter-spacing:.5px; }
@@ -450,7 +451,6 @@
     }
     .role-btn:hover { border-color: rgba(255,255,255,.25); background: var(--surface-hover); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
     .role-btn.selected-admin  { border-color: var(--gold); background: rgba(245,158,11,.12); box-shadow: 0 0 0 1px rgba(245,158,11,.3), 0 8px 24px rgba(245,158,11,.2); }
-    .role-btn.selected-student{ border-color: var(--teal); background: rgba(13,148,136,.12);  box-shadow: 0 0 0 1px rgba(13,148,136,.3),  0 8px 24px rgba(13,148,136,.2); }
     .role-icon { font-size: 32px; }
     .role-name { font-size: .88rem; font-weight: 700; }
     .role-desc { font-size: .68rem; color: var(--text-muted); text-align: center; line-height: 1.4; }
@@ -485,7 +485,6 @@
     .btn-enter.gold:hover { box-shadow: 0 8px 24px rgba(245,158,11,.55); }
     .role-badge { display: flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 600; border-radius: 8px; padding: 6px 12px; border: 1px solid; white-space: nowrap; }
     .role-badge.admin   { background: rgba(245,158,11,.12); color: var(--gold-light); border-color: rgba(245,158,11,.3); }
-    .role-badge.student { background: rgba(13,148,136,.12); color: var(--teal-light); border-color: rgba(13,148,136,.3); }
     .btn-logout { background: rgba(244,63,94,.1); border: 1px solid rgba(244,63,94,.3); color: #fda4af; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: .74rem; font-weight: 600; cursor: pointer; transition: background .2s; white-space: nowrap; }
     .btn-logout:hover { background: rgba(244,63,94,.25); }
     #readonlyBanner { background: linear-gradient(135deg, rgba(13,148,136,.12), rgba(6,95,90,.08)); border-bottom: 1px solid rgba(13,148,136,.25); padding: 10px 32px; display: none; align-items: center; gap: 10px; font-size: .8rem; color: var(--teal-light); }
@@ -531,23 +530,16 @@
     <div class="login-logo">🖥️</div>
     <div class="login-title">Inventario Tecnológico</div>
     <div class="login-subtitle">Complejo Educativo Caserío Llano Largo<br>Selecciona cómo deseas ingresar</div>
-    <div class="role-selector">
-      <button class="role-btn" id="roleAdminBtn" onclick="selectRole('admin')">
+        <div class="role-selector" style="justify-content:center; gap:12px; margin-bottom:18px;">
+      <div class="role-card selected-admin">
         <span class="role-icon">🔐</span>
-        <span class="role-name">Administrador</span>
-        <span class="role-desc">Acceso total al sistema</span>
-      </button>
-      <button class="role-btn" id="roleStudentBtn" onclick="selectRole('student')">
-        <span class="role-icon">👁️</span>
-        <span class="role-name">Alumno</span>
-        <span class="role-desc">Solo lectura del inventario</span>
-      </button>
+        <div>
+          <div class="role-name">Administrador</div>
+          <div class="role-desc">Acceso total al sistema</div>
+        </div>
+      </div>
     </div>
     <div class="pwd-section" id="pwdSection">
-      <label class="pwd-label" id="userLabel" style="display:none">Correo institucional del alumno</label>
-      <input class="pwd-input" id="userInput" type="text" placeholder="19755306@clases.edu.sv" style="display:none; margin-bottom:10px;"
-             onkeydown="if(event.key==='Enter') doLogin()" />
-      <div class="pwd-hint" id="userHint" style="display:none; font-size:.8rem; color:var(--text-muted); margin-top:-6px; margin-bottom:10px;">Ejemplo: 19755306@clases.edu.sv</div>
       <label class="pwd-label" id="pwdLabel">Contraseña de administrador</label>
       <div class="pwd-wrap">
         <input class="pwd-input" id="pwdInput" type="password" placeholder="••••••••"
@@ -556,8 +548,8 @@
       </div>
       <div class="pwd-error" id="pwdError">Credenciales incorrectas. Intenta de nuevo.</div>
     </div>
-    <button class="btn-enter" id="btnEnter" onclick="doLogin()" disabled>
-      Selecciona un perfil para continuar
+    <button class="btn-enter" id="btnEnter" onclick="doLogin()">
+      Acceder como Administrador
     </button>
   </div>
 </div>
@@ -605,9 +597,6 @@
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
     </svg>
     <span>Nuevo Equipo</span>
-  </button>
-  <button class="btn-add" id="btnCreateStudent" onclick="openCreateStudentAccount()" style="display:none; background:linear-gradient(135deg,var(--teal),#065f5a); color:#fff; box-shadow:0 4px 16px rgba(13,148,136,.3);">
-    <span>➕ Crear alumno</span>
   </button>
 </header>
 
@@ -769,7 +758,6 @@
 
 <!-- Firebase SDK v10 (módulos compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
@@ -777,7 +765,6 @@
    🔐 AUTENTICACIÓN FIREBASE
 ═══════════════════════════════════════════════════════════ */
 const ADMIN_PASSWORD = 'llano2024';
-const ADMIN_AUTH_EMAIL = 'admin@clases.edu.sv';
 
 /* ═══════════════════════════════════════════════════════════
    🔥 FIREBASE CONFIG
@@ -797,13 +784,12 @@ const IS_CONFIGURED = !FIREBASE_CONFIG.apiKey.startsWith("TU_");
    ESTADO GLOBAL
 ════════════════════════════════ */
 let db          = null;
-let auth        = null;
 let equipos     = [];
 let editId      = null;
 let filtros     = { estado: 'todos', tipo: 'todos' };
+let currentSummaryFilter = null;
 let unsubscribe = null;
 let currentRole = null;
-let selectedRole = null;
 let currentUser = null;
 let currentView = 'dashboard'; // 'dashboard' | 'inventory'
 let currentGradeFilter = null; // null = todos | string = grado específico
@@ -813,46 +799,11 @@ let auditUnsubscribe = null;
 /* ════════════════════════════════
    LOGIN / ROLES
 ════════════════════════════════ */
-function selectRole(role) {
-  selectedRole = role;
-  const adminBtn   = document.getElementById('roleAdminBtn');
-  const studentBtn = document.getElementById('roleStudentBtn');
-  const pwdSection = document.getElementById('pwdSection');
-  const btnEnter   = document.getElementById('btnEnter');
-  const pwdError   = document.getElementById('pwdError');
-  const userLabel  = document.getElementById('userLabel');
-  const userInput  = document.getElementById('userInput');
-  const pwdLabel   = document.getElementById('pwdLabel');
-
-  adminBtn.className   = 'role-btn' + (role === 'admin'   ? ' selected-admin'   : '');
-  studentBtn.className = 'role-btn' + (role === 'student' ? ' selected-student' : '');
-  pwdError.classList.remove('show');
-  document.getElementById('pwdInput').classList.remove('error');
-  userInput.classList.remove('error');
-
-  if (role === 'admin') {
-    pwdSection.classList.add('show');
-    userLabel.style.display = 'none';
-    userInput.style.display = 'none';
-    document.getElementById('userHint').style.display = 'none';
-    userInput.value = '';
-    pwdLabel.textContent = 'Contraseña de administrador';
-    btnEnter.textContent = 'Ingresar como Administrador';
-    btnEnter.className   = 'btn-enter gold';
-    btnEnter.disabled    = false;
-    setTimeout(() => document.getElementById('pwdInput').focus(), 100);
-  } else {
-    pwdSection.classList.add('show');
-    userLabel.style.display = 'block';
-    userInput.style.display = 'block';
-    document.getElementById('userHint').style.display = 'block';
-    document.getElementById('pwdInput').value = '';
-    pwdLabel.textContent = 'Contraseña del alumno';
-    btnEnter.textContent = 'Ingresar como Alumno';
-    btnEnter.className   = 'btn-enter';
-    btnEnter.disabled    = false;
-    setTimeout(() => userInput.focus(), 100);
-  }
+function showLoginScreen() {
+  const login = document.getElementById('loginScreen');
+  login.style.display = 'flex';
+  login.style.opacity = '1';
+  document.getElementById('pwdInput').focus();
 }
 
 function togglePwd() {
@@ -863,76 +814,21 @@ function togglePwd() {
 }
 
 async function doLogin() {
-  if (!selectedRole) return;
-
-  if (selectedRole === 'admin') {
-    const pwd = document.getElementById('pwdInput').value;
-    if (!pwd) {
-      document.getElementById('pwdInput').classList.add('error');
-      document.getElementById('pwdError').classList.add('show');
-      return;
-    }
-    if (!IS_CONFIGURED || !auth) {
-      document.getElementById('pwdError').textContent = 'No hay conexión a Firebase Authentication.';
-      document.getElementById('pwdError').classList.add('show');
-      return;
-    }
-    try {
-      const cred = await auth.signInWithEmailAndPassword(ADMIN_AUTH_EMAIL, pwd);
-      currentUser = {
-        id: cred.user.uid,
-        nombre: 'Administrador',
-        tipo: 'admin',
-        usuario: ADMIN_AUTH_EMAIL,
-        email: cred.user.email
-      };
-    } catch (err) {
-      console.error('Login admin error:', err);
-      document.getElementById('pwdInput').classList.add('error');
-      document.getElementById('pwdError').textContent = 'Credenciales de administrador inválidas.';
-      document.getElementById('pwdError').classList.add('show');
-      document.getElementById('pwdInput').value = '';
-      setTimeout(() => document.getElementById('pwdInput').classList.remove('error'), 600);
-      return;
-    }
-  } else {
-    const correo = document.getElementById('userInput').value.trim().toLowerCase();
-    const pwd = document.getElementById('pwdInput').value;
-    if (!correo || !pwd) {
-      document.getElementById('userInput').classList.add('error');
-      document.getElementById('pwdInput').classList.add('error');
-      document.getElementById('pwdError').classList.add('show');
-      return;
-    }
-    if (!IS_CONFIGURED || !auth || !db) {
-      document.getElementById('pwdError').textContent = 'No hay conexión a Firebase para validar usuarios.';
-      document.getElementById('pwdError').classList.add('show');
-      return;
-    }
-    try {
-      const credential = await auth.signInWithEmailAndPassword(correo, pwd);
-      const snap = await db.collection('usuarios').where('correoInstitucional', '==', correo).limit(1).get();
-      const doc = snap.docs[0];
-      if (!doc) {
-        await auth.signOut();
-        document.getElementById('userInput').classList.add('error');
-        document.getElementById('pwdInput').classList.add('error');
-        document.getElementById('pwdError').textContent = 'No existe un perfil de alumno para este correo.';
-        document.getElementById('pwdError').classList.add('show');
-        document.getElementById('pwdInput').value = '';
-        return;
-      }
-      currentUser = { id: doc.id, ...doc.data(), tipo: 'student', authUid: credential.user.uid, email: credential.user.email };
-    } catch (err) {
-      console.error('Login student error:', err);
-      document.getElementById('pwdError').textContent = 'No se pudo validar el usuario.';
-      document.getElementById('pwdError').classList.add('show');
-      document.getElementById('pwdInput').value = '';
-      return;
-    }
+  const pwd = document.getElementById('pwdInput').value;
+  if (!pwd) {
+    document.getElementById('pwdInput').classList.add('error');
+    document.getElementById('pwdError').classList.add('show');
+    return;
   }
-
-  currentRole = selectedRole;
+  if (pwd !== ADMIN_PASSWORD) {
+    document.getElementById('pwdInput').classList.add('error');
+    document.getElementById('pwdError').classList.add('show');
+    document.getElementById('pwdInput').value = '';
+    setTimeout(() => document.getElementById('pwdInput').classList.remove('error'), 600);
+    return;
+  }
+  currentUser = { id: 'admin', nombre: 'Administrador', tipo: 'admin', usuario: 'admin' };
+  currentRole = 'admin';
   sessionStorage.setItem('inv_role', currentRole);
   if (currentUser) sessionStorage.setItem('inv_user', JSON.stringify(currentUser));
 
@@ -949,30 +845,23 @@ function applyRoleUI() {
 
   const badge = document.getElementById('roleBadge');
   badge.style.display = 'flex';
-  badge.className = 'role-badge ' + (isAdmin ? 'admin' : 'student');
-  badge.textContent = isAdmin ? '🔐 Administrador' : `👁️ ${currentUser?.nombre || 'Alumno'}`;
+  badge.className = 'role-badge admin';
+  badge.textContent = '🔐 Administrador';
 
   document.getElementById('btnLogout').style.display = 'flex';
 
   const btnAdd = document.getElementById('btnAdd');
-  const btnCreateStudent = document.getElementById('btnCreateStudent');
   btnAdd.style.display = isAdmin ? 'flex' : 'none';
-  btnCreateStudent.style.display = isAdmin ? 'flex' : 'none';
 
-  const readonlyBanner = document.getElementById('readonlyBanner');
-  if (!isAdmin) readonlyBanner.classList.add('show');
-  else readonlyBanner.classList.remove('show');
+  document.getElementById('readonlyBanner').classList.remove('show');
 }
 
 function logout() {
   sessionStorage.removeItem('inv_role');
   sessionStorage.removeItem('inv_user');
-  if (auth && auth.currentUser) {
-    auth.signOut().catch(() => {});
-  }
   if (unsubscribe) { unsubscribe(); unsubscribe = null; }
   if (auditUnsubscribe) { auditUnsubscribe(); auditUnsubscribe = null; }
-  currentRole = null; selectedRole = null; currentUser = null;
+  currentRole = null; currentUser = null;
   currentView = 'dashboard'; currentGradeFilter = null;
   document.getElementById('roleBadge').style.display  = 'none';
   document.getElementById('btnLogout').style.display  = 'none';
@@ -980,13 +869,11 @@ function logout() {
   document.getElementById('btnAdd').disabled          = true;
   document.getElementById('readonlyBanner').classList.remove('show');
   document.getElementById('setupBanner').classList.remove('show');
-  document.getElementById('roleAdminBtn').className  = 'role-btn';
-  document.getElementById('roleStudentBtn').className = 'role-btn';
   document.getElementById('pwdSection').classList.remove('show');
   document.getElementById('pwdInput').value           = '';
   document.getElementById('pwdError').classList.remove('show');
-  document.getElementById('btnEnter').disabled        = true;
-  document.getElementById('btnEnter').textContent     = 'Selecciona un perfil para continuar';
+  document.getElementById('btnEnter').disabled        = false;
+  document.getElementById('btnEnter').textContent     = 'Acceder como Administrador';
   document.getElementById('btnEnter').className       = 'btn-enter';
   const ls = document.getElementById('loginScreen');
   ls.style.display = 'flex';
@@ -1010,7 +897,6 @@ function init() {
   }
   try {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    auth = firebase.auth();
     db = firebase.firestore();
     setSyncStatus('syncing', 'Conectando…');
     subscribeToFirestore();
@@ -1158,39 +1044,7 @@ async function registrarAuditoria(accion, equipo, cambios) {
   }
 }
 
-async function openCreateStudentAccount() {
-  if (!IS_CONFIGURED || !db || !auth) {
-    toast('⚠️ No hay conexión a Firebase para crear cuentas', 'warning');
-    return;
-  }
-  const correo = prompt('Correo institucional del alumno');
-  const password = prompt('Contraseña temporal del alumno');
-  if (!correo || !password) return;
-  const correoTrim = correo.trim().toLowerCase();
-  const passwordTrim = password.trim();
-  if (!correoTrim || !passwordTrim) return;
-  try {
-    const existing = await db.collection('usuarios').where('correoInstitucional', '==', correoTrim).limit(1).get();
-    if (!existing.empty) {
-      alert('Ese correo institucional ya existe. Elige otro.');
-      return;
-    }
-    const cred = await auth.createUserWithEmailAndPassword(correoTrim, passwordTrim);
-    await db.collection('usuarios').add({
-      tipo: 'student',
-      usuario: correoTrim,
-      correoInstitucional: correoTrim,
-      nombre: correoTrim,
-      authUid: cred.user.uid,
-      creadoPor: currentUser?.nombre || 'Administrador',
-      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    toast('✅ Cuenta de alumno creada en Firebase Authentication', 'success');
-  } catch (err) {
-    console.error('Crear usuario error:', err);
-    toast('❌ No se pudo crear la cuenta: ' + (err.message || 'Error desconocido'), 'error');
-  }
-}
+// La creación de usuarios de alumno se ha retirado del flujo. Solo administrador puede acceder.
 
 /* ════════════════════════════════
    UI HELPERS
@@ -1237,9 +1091,10 @@ function showDashboard() {
   renderDashboard();
 }
 
-function showInventory(gradeFilter) {
+function showInventory(gradeFilter, summaryFilter = null) {
   currentView = 'inventory';
   currentGradeFilter = gradeFilter;
+  currentSummaryFilter = summaryFilter;
   document.getElementById('dashboardView').classList.remove('active');
   document.getElementById('inventoryView').classList.add('active');
 
@@ -1254,7 +1109,15 @@ function showInventory(gradeFilter) {
 
   // Breadcrumb
   const breadcrumbGrade = document.getElementById('breadcrumbGrade');
-  if (gradeFilter) {
+  if (currentSummaryFilter) {
+    const titles = {
+      sinEquipo: '🚫 Estudiantes sin equipo',
+      sinTablet: '📱 Estudiantes sin tablet',
+      sinComputadora: '💻 Estudiantes sin computadora'
+    };
+    breadcrumbGrade.style.display = 'inline-flex';
+    breadcrumbGrade.textContent   = titles[currentSummaryFilter] || '📚 Inventario';
+  } else if (gradeFilter) {
     breadcrumbGrade.style.display = 'inline-flex';
     breadcrumbGrade.textContent   = '📚 ' + gradeFilter;
   } else {
@@ -1266,7 +1129,12 @@ function showInventory(gradeFilter) {
 }
 
 function backToDashboard() {
+  currentSummaryFilter = null;
   showDashboard();
+}
+
+function showMissing(filter) {
+  showInventory(null, filter);
 }
 
 /* ════════════════════════════════
@@ -1350,16 +1218,16 @@ function renderStats(gradeFilter, targetId) {
     { icon:'📦', value:total,      label:'Total Equipos',         accent:'#0d9488' },
     { icon:'✅', value:buenos,     label:'Buen Estado',           accent:'#0d9488' },
     { icon:'⚠️', value:danados,    label:'Dañados',               accent:'#f43f5e' },
-    { icon:'📱', value:tablets,    label:'Tablets',               accent:'#818cf8' },
-    { icon:'💻', value:compus,     label:'Computadoras',          accent:'#f59e0b' },
-    { icon:'🚫', value:sinEquipo,  label:'Sin equipo',            accent:'#f43f5e' },
+    { icon:'📱', value:tablets,    label:'Tablets',               accent:'#818cf8', action:'sinTablet' },
+    { icon:'💻', value:compus,     label:'Computadoras',          accent:'#f59e0b', action:'sinComputadora' },
+    { icon:'🚫', value:sinEquipo,  label:'Sin equipo',            accent:'#f43f5e', action:'sinEquipo' },
   ];
   const el = document.getElementById(gridId);
   if (el) el.innerHTML = defs.map(s => `
-    <div class="stat-card" style="--accent:${s.accent}">
+    <div class="stat-card${s.action ? ' clickable' : ''}" style="--accent:${s.accent};" ${s.action ? `onclick="showMissing('${s.action}')"` : ''}>
       <div class="stat-icon">${s.icon}</div>
       <div class="stat-value">${s.value}</div>
-      <div class="stat-label">${s.label}</div>
+      <div class="stat-label">${s.label}${s.action ? ' • Ver nombres' : ''}</div>
     </div>`).join('');
 }
 
@@ -1367,15 +1235,24 @@ function renderStats(gradeFilter, targetId) {
    FILTERS
 ════════════════════════════════ */
 function setFiltro(key, val, btn) {
+  currentSummaryFilter = null;
   filtros[key] = val;
   document.querySelectorAll(`[data-filter-${key}]`).forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  document.getElementById('breadcrumbGrade').style.display = 'none';
   renderCards();
 }
 
 function filteredEquipos() {
   const q  = (document.getElementById('searchInput')?.value || '').toLowerCase();
   let src  = currentGradeFilter ? equipos.filter(e => e.grado === currentGradeFilter) : equipos;
+  if (currentSummaryFilter === 'sinEquipo') {
+    src = src.filter(e => e.tipo === 'No dispone de equipo informatico');
+  } else if (currentSummaryFilter === 'sinTablet') {
+    src = src.filter(e => e.tipo !== 'Tablet');
+  } else if (currentSummaryFilter === 'sinComputadora') {
+    src = src.filter(e => e.tipo !== 'Computadora');
+  }
   return src.filter(e => {
     const mE = filtros.estado === 'todos' || e.estado === filtros.estado;
     const mT = filtros.tipo   === 'todos' || e.tipo   === filtros.tipo;
@@ -1414,7 +1291,7 @@ function renderCards() {
   const list    = filteredEquipos();
   const grid    = document.getElementById('cardsGrid');
   const isAdmin = currentRole === 'admin';
-  const canEdit = isAdmin || currentRole === 'student';
+  const canEdit = isAdmin;
 
   if (!list.length) {
     grid.innerHTML = `<div class="empty-state">
@@ -1446,18 +1323,14 @@ function renderCards() {
     const seccionBadge = e.seccion ? `<span class="badge badge-grade">🏷️ Sección ${escHtml(e.seccion)}</span>` : '';
 
     const actionsHTML = isAdmin
-      ? `<div class="card-actions">
-           <button class="btn-sm ${toggleCls}" onclick="toggleEstado('${e.id}')">${toggleLbl}</button>
-           <button class="btn-sm btn-edit"   onclick="openEdit('${e.id}')">✏️ Editar</button>
-           <button class="btn-sm btn-delete" onclick="confirmDelete('${e.id}')">🗑️</button>
-         </div>`
-      : canEdit
-        ? `<div class="card-actions">
-             <button class="btn-sm btn-edit" onclick="openEdit('${e.id}')">✏️ Editar</button>
-           </div>`
-        : `<div class="card-actions" style="pointer-events:none;opacity:.45;user-select:none;">
-             <div class="btn-sm ${toggleCls}" style="cursor:default;">🔒 Solo lectura</div>
-           </div>`;
+    ? `<div class="card-actions">
+         <button class="btn-sm ${toggleCls}" onclick="toggleEstado('${e.id}')">${toggleLbl}</button>
+         <button class="btn-sm btn-edit" onclick="openEdit('${e.id}')">✏️ Editar</button>
+         <button class="btn-sm btn-delete" onclick="confirmDelete('${e.id}')">🗑️</button>
+       </div>`
+    : `<div class="card-actions" style="pointer-events:none;opacity:.45;user-select:none;">
+         <div class="btn-sm ${toggleCls}" style="cursor:default;">🔒 Solo lectura</div>
+       </div>`;
 
     return `
     <div class="equipo-card" data-id="${e.id}">
@@ -1519,7 +1392,7 @@ function openModal(forceDañado = false) {
 }
 
 function openEdit(id, forceDañado = false) {
-  if (currentRole !== 'admin' && currentRole !== 'student') return;
+  if (currentRole !== 'admin') return;
   const eq = equipos.find(e => e.id === id);
   if (!eq) return;
   editId = id; resetForm();
@@ -1615,7 +1488,7 @@ function clearErr(f,e) { document.getElementById(f).classList.remove('error'); d
 ════════════════════════════════ */
 document.getElementById('equipoForm').addEventListener('submit', async function(ev) {
   ev.preventDefault();
-  if (currentRole !== 'admin' && currentRole !== 'student') return;
+  if (currentRole !== 'admin') return;
 
   let valid  = true;
   const nombre = document.getElementById('fNombre').value.trim();
@@ -1711,7 +1584,16 @@ document.getElementById('modalOverlay').addEventListener('click', function(e) {
 /* ════════════════════════════════
    ARRANQUE
 ════════════════════════════════ */
-document.getElementById('loadingScreen').style.display = 'none';
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const loader = document.getElementById('loadingScreen');
+    loader.style.opacity = '0';
+    loader.style.transition = 'opacity .6s';
+    setTimeout(() => {
+      loader.style.display = 'none';
+      showLoginScreen();
+  }, 900);
+});
 </script>
 </body>
 </html>
