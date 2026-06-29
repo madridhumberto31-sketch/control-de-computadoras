@@ -634,6 +634,14 @@
       <button class="filter-btn"        data-filter-tipo="Computadora" onclick="setFiltro('tipo','Computadora',this)">💻 Computadora</button>
       <button class="filter-btn"        data-filter-tipo="No dispone de equipo informatico" onclick="setFiltro('tipo','No dispone de equipo informatico',this)">🚫 Sin equipo</button>
       <div class="filter-sep"></div>
+      <span class="filter-label">Sección:</span>
+      <select class="form-select" id="sectionFilter" style="min-width:120px;" onchange="setSectionFilter(this.value)">
+        <option value="todos">Todas</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+      </select>
+      <div class="filter-sep"></div>
       <div class="search-wrap">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -788,6 +796,7 @@ let equipos     = [];
 let editId      = null;
 let filtros     = { estado: 'todos', tipo: 'todos' };
 let currentSummaryFilter = null;
+let currentSectionFilter = 'todos';
 let unsubscribe = null;
 let currentRole = null;
 let currentUser = null;
@@ -1096,6 +1105,9 @@ function showInventory(gradeFilter, summaryFilter = null) {
   currentView = 'inventory';
   currentGradeFilter = gradeFilter;
   currentSummaryFilter = summaryFilter;
+  currentSectionFilter = 'todos';
+  const sectionSelect = document.getElementById('sectionFilter');
+  if (sectionSelect) sectionSelect.value = 'todos';
   document.getElementById('dashboardView').classList.remove('active');
   document.getElementById('inventoryView').classList.add('active');
 
@@ -1268,6 +1280,11 @@ function setFiltro(key, val, btn) {
   renderCards();
 }
 
+function setSectionFilter(val) {
+  currentSectionFilter = val || 'todos';
+  renderCards();
+}
+
 function filteredEquipos() {
   const q  = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const src = getSummarySource(currentGradeFilter);
@@ -1276,7 +1293,8 @@ function filteredEquipos() {
     const mE = filtros.estado === 'todos' || effectiveEstado === filtros.estado;
     const mT = filtros.tipo   === 'todos' || e.tipo   === filtros.tipo;
     const mS = !q || e.nombre.toLowerCase().includes(q) || e.correo.toLowerCase().includes(q);
-    return mE && mT && mS;
+    const mSec = currentSectionFilter === 'todos' || (e.seccion || '').toString().toUpperCase() === currentSectionFilter.toUpperCase();
+    return mE && mT && mS && mSec;
   });
 }
 
