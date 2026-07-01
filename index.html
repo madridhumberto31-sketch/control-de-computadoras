@@ -471,6 +471,12 @@
     .pwd-toggle:hover { color: var(--text); }
     .pwd-error { text-align: left; font-size: .74rem; color: #fda4af; margin-top: 6px; display: none; }
     .pwd-error.show { display: block; }
+    .section-cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 16px; }
+    .section-card { border: 1px solid var(--border); background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 14px; cursor: pointer; transition: all .2s; min-width: 84px; text-align: center; }
+    .section-card:hover { transform: translateY(-2px); border-color: var(--gold); background: rgba(245,158,11,.12); }
+    .section-card.active { border-color: var(--gold); background: rgba(245,158,11,.16); box-shadow: 0 0 0 1px rgba(245,158,11,.25); }
+    .section-card-title { font-size: .8rem; font-weight: 700; color: var(--text); }
+    .section-card-sub { font-size: .68rem; color: var(--text-muted); margin-top: 2px; }
     .btn-enter {
       width: 100%; padding: 14px;
       background: linear-gradient(135deg, var(--teal), #065f5a);
@@ -635,12 +641,24 @@
       <button class="filter-btn"        data-filter-tipo="No dispone de equipo informatico" onclick="setFiltro('tipo','No dispone de equipo informatico',this)">🚫 Sin equipo</button>
       <div class="filter-sep"></div>
       <span class="filter-label">Sección:</span>
-      <select class="form-select" id="sectionFilter" style="min-width:120px;" onchange="setSectionFilter(this.value)">
-        <option value="todos">Todas</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-      </select>
+      <div class="section-cards" id="sectionCards">
+        <div class="section-card active" data-section="todos" onclick="setSectionFilter('todos', this)">
+          <div class="section-card-title">Todas</div>
+          <div class="section-card-sub">Ver todo</div>
+        </div>
+        <div class="section-card" data-section="A" onclick="setSectionFilter('A', this)">
+          <div class="section-card-title">Sección A</div>
+          <div class="section-card-sub">Grupo A</div>
+        </div>
+        <div class="section-card" data-section="B" onclick="setSectionFilter('B', this)">
+          <div class="section-card-title">Sección B</div>
+          <div class="section-card-sub">Grupo B</div>
+        </div>
+        <div class="section-card" data-section="C" onclick="setSectionFilter('C', this)">
+          <div class="section-card-title">Sección C</div>
+          <div class="section-card-sub">Grupo C</div>
+        </div>
+      </div>
       <div class="filter-sep"></div>
       <div class="search-wrap">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1280,8 +1298,10 @@ function setFiltro(key, val, btn) {
   renderCards();
 }
 
-function setSectionFilter(val) {
+function setSectionFilter(val, el = null) {
   currentSectionFilter = val || 'todos';
+  document.querySelectorAll('.section-card').forEach(card => card.classList.remove('active'));
+  if (el) el.classList.add('active');
   renderCards();
 }
 
