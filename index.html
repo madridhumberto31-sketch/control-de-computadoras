@@ -1289,8 +1289,11 @@ function renderSectionCards() {
     seccionMap[s] = { total: 0, buenos: 0, danados: 0 };
   });
   
+  // Filtrar por grado si está seleccionado
+  const src = currentGradeFilter ? equipos.filter(e => e.grado === currentGradeFilter) : equipos;
+  
   // Contar todos como "Todas"
-  equipos.forEach(e => {
+  src.forEach(e => {
     const effectiveEstado = getEffectiveEstado(e);
     const s = e.seccion || 'sin seccion';
     const seccionUpper = String(s).toUpperCase();
