@@ -160,7 +160,7 @@
 
     .grades-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px; margin-bottom: 32px;
     }
     .grade-card {
@@ -498,7 +498,7 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
-      .grades-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+      .grades-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
     }
     @media (max-width: 600px) {
       header { padding: 12px 14px; gap: 10px; }
@@ -512,7 +512,7 @@
       main { padding: 16px 12px 50px; }
       .sync-indicator span { display: none; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .grades-grid { grid-template-columns: 1fr; }
+      .grades-grid { grid-template-columns: repeat(2, 1fr); }
       .filters-row { gap: 6px; }
       .filter-sep { display: none; }
       .toast-container { right: 12px; bottom: 16px; left: 12px; }
