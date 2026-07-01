@@ -641,24 +641,7 @@
       <button class="filter-btn"        data-filter-tipo="No dispone de equipo informatico" onclick="setFiltro('tipo','No dispone de equipo informatico',this)">🚫 Sin equipo</button>
       <div class="filter-sep"></div>
       <span class="filter-label">Sección:</span>
-      <div class="section-cards" id="sectionCards">
-        <div class="section-card active" data-section="todos" onclick="setSectionFilter('todos', this)">
-          <div class="section-card-title">Todas</div>
-          <div class="section-card-sub">Ver todo</div>
-        </div>
-        <div class="section-card" data-section="A" onclick="setSectionFilter('A', this)">
-          <div class="section-card-title">Sección A</div>
-          <div class="section-card-sub">Grupo A</div>
-        </div>
-        <div class="section-card" data-section="B" onclick="setSectionFilter('B', this)">
-          <div class="section-card-title">Sección B</div>
-          <div class="section-card-sub">Grupo B</div>
-        </div>
-        <div class="section-card" data-section="C" onclick="setSectionFilter('C', this)">
-          <div class="section-card-title">Sección C</div>
-          <div class="section-card-sub">Grupo C</div>
-        </div>
-      </div>
+      <div class="grades-grid" id="sectionCardsContainer"></div>
       <div class="filter-sep"></div>
       <div class="search-wrap">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1124,8 +1107,6 @@ function showInventory(gradeFilter, summaryFilter = null) {
   currentGradeFilter = gradeFilter;
   currentSummaryFilter = summaryFilter;
   currentSectionFilter = 'todos';
-  const sectionSelect = document.getElementById('sectionFilter');
-  if (sectionSelect) sectionSelect.value = 'todos';
   document.getElementById('dashboardView').classList.remove('active');
   document.getElementById('inventoryView').classList.add('active');
 
@@ -1158,6 +1139,7 @@ function showInventory(gradeFilter, summaryFilter = null) {
   }
 
   renderStats(gradeFilter);
+  renderSectionCards();
   renderCards();
 }
 
@@ -1298,11 +1280,61 @@ function setFiltro(key, val, btn) {
   renderCards();
 }
 
+function renderSectionCards() {
+  const seccionMap = {};
+  const secciones = ['Todas', 'A', 'B', 'C'];
+  
+  // Inicializar
+  secciones.forEach(s => {
+    seccionMap[s] = { total: 0, buenos: 0, danados: 0 };
+  });
+  
+  // Contar todos como "Todas"
+  equipos.forEach(e => {
+    const effectiveEstado = getEffectiveEstado(e);
+    const s = e.seccion || 'sin seccion';
+    const seccionUpper = String(s).toUpperCase();
+    
+    seccionMap['Todas'].total++;
+    if (effectiveEstado === 'bueno') seccionMap['Todas'].buenos++;
+    if (effectiveEstado === 'dañado') seccionMap['Todas'].danados++;
+    
+    if (seccionMap[seccionUpper]) {
+      seccionMap[seccionUpper].total++;
+      if (effectiveEstado === 'bueno') seccionMap[seccionUpper].buenos++;
+      if (effectiveEstado === 'dañado') seccionMap[seccionUpper].danados++;
+    }
+  });
+  
+  const grid = document.getElementById('sectionCardsContainer');
+  if (!grid) return;
+  
+  grid.innerHTML = secciones.map(s => {
+    const d = seccionMap[s];
+    const pct = d.total > 0 ? Math.round((d.buenos / d.total) * 100) : 0;
+    const icon = s === 'Todas' ? '📚' : '🍻';
+    const label = s === 'Todas' ? 'Todas las secciones' : `Sección ${s}`;
+    return `
+      <div class="grade-card" onclick="setSectionFilter('${s === 'Todas' ? 'todos' : s}', event.currentTarget)" style="cursor:pointer;">
+        <div class="grade-card-name">${icon} ${label}</div>
+        <div class="grade-card-total">${d.total}</div>
+        <div class="grade-card-detail">
+          <span class="gcd-good">✅ ${d.buenos} buen estado</span>
+          <span class="gcd-bad">⚠️ ${d.danados} dañados</span>
+        </div>
+        <div class="grade-progress-bar">
+          <div class="grade-progress-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="grade-card-sub">${pct}% en buen estado</div>
+      </div>`;
+  }).join('');
+}
+
 function setSectionFilter(val, el = null) {
   currentSectionFilter = val || 'todos';
-  document.querySelectorAll('.section-card').forEach(card => card.classList.remove('active'));
-  if (el) el.classList.add('active');
+  if (el && el.classList) el.classList.add('grade-card');
   renderCards();
+  renderSectionCards();
 }
 
 function filteredEquipos() {
