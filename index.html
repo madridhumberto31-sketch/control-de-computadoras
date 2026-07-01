@@ -160,8 +160,21 @@
 
     .grades-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px; margin-bottom: 32px;
+    }
+
+    #sectionCardsContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 0;
+      align-items: stretch;
+    }
+
+    #sectionCardsContainer .grade-card {
+      flex: 1 1 calc(25% - 9px);
+      min-width: 140px;
     }
     .grade-card {
       background: var(--surface); border: 1px solid var(--border);
